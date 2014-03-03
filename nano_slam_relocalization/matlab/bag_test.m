@@ -76,6 +76,40 @@ tic;
 [x,fval,exitflag,output] = fminunc(f, x0, options);
 toc;
 
+initial_diff = abs(r.im_ref - r.im_new);
+optimized_diff = abs(r.im_ref - r.getTransformedImage(x));
+
+disp(['sum of initial differences ' num2str(sum(initial_diff(:)))]);
+disp(['sum of optimized differences ' num2str(sum(optimized_diff(:)))]);
+
 figure; 
-subplot(1,2,1); imshow(abs(r.im_ref - r.getTransformedImage(x)));
-subplot(1,2,2); imshow(abs(r.im_ref - r.im_new));
+subplot(1,2,1); imshow(initial_diff);
+subplot(1,2,2); imshow(optimized_diff);
+
+%% Lucas kanard
+
+% Template image
+im_template = im2double(imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif'));
+
+% Image
+alpha = 0;
+t1 = 2;
+t2 = -2;
+tform = maketform('affine', ...
+                    [cos(alpha) sin(alpha) 0; 
+                     -sin(alpha) cos(alpha) 0;
+                     t1 t2 1]); 
+        
+% Apply transform on the image
+im = imtransform(im_template, tform, ...
+                'XData',[1 size(im_template,2)],...
+                'YData',[1 size(im_template,1)]);
+            
+% [p,I_roi,T_error]=LucasKanadeAffine(im,[0 0 0 0 0 0],im_template);
+
+mask = false(size(im_template));
+mask(50:200, 50:200) = true;
+
+myLucasKanade(im_template, im)
+
+

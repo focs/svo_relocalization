@@ -5,7 +5,7 @@ project(nano_slam_relocalization)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  rosccp
+  roscpp
 )
 
 ## System dependencies are found with CMake's conventions
