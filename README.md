@@ -1,4 +1,4 @@
-svo_slam_relocalization
+svo_relocalization
 ========================
 
 Relocalization algorithm 
