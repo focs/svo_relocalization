@@ -92,13 +92,13 @@ subplot(1,2,2); imshow(optimized_diff);
 im_template = im2double(imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif'));
 
 % Image
-alpha = 0;
+alpha = 0.01;
 t1 = 2;
 t2 = -2;
 tform = maketform('affine', ...
-                    [cos(alpha) sin(alpha) 0; 
-                     -sin(alpha) cos(alpha) 0;
-                     t1 t2 1]); 
+                    [cos(alpha) sin(alpha) t1; 
+                     -sin(alpha) cos(alpha) t2;
+                     0 0 1]'); 
         
 % Apply transform on the image
 im = imtransform(im_template, tform, ...
@@ -110,6 +110,6 @@ im = imtransform(im_template, tform, ...
 mask = false(size(im_template));
 mask(50:200, 50:200) = true;
 
-myLucasKanade(im_template, im)
+myLucasKanade(im_template, im, mask)
 
 
