@@ -89,11 +89,12 @@ subplot(1,2,2); imshow(optimized_diff);
 %% Lucas kanard
 
 % Template image
-im_template = im2double(imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif'));
+im_template = im2double(rgb2gray(imread('/opt/matlab2012a/toolbox/images/imdemos/onion.png')));
+im_template = im2double((imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif')));
 
 % Image
 alpha = 0.01;
-t1 = 2;
+t1 = 5;
 t2 = -2;
 tform = maketform('affine', ...
                     [cos(alpha) sin(alpha) t1; 
@@ -107,10 +108,19 @@ im = imtransform(im_template, tform, ...
             
 % [p,I_roi,T_error]=LucasKanadeAffine(im,[0 0 0 0 0 0],im_template);
 
-mask = false(size(im_template));
-mask(50:200, 50:200) = true;
+mask = true(size(im_template));
+% mask(50:200, 50:200) = true;
 
+profile on
 tic
-myLucasKanade(im_template, im, mask)
+[im_final p] = myLucasKanade(im_template, im, mask);
 toc
+profile off
 
+% Show results
+subplot(2,1,1); imshow([im_template im im_final]);
+subplot(2,1,2); imshow(mat2gray(im_final - im_template));
+
+disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
+
+ 

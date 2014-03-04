@@ -1,5 +1,5 @@
 
-function myLucasKanade (im_template, im, mask)
+function [im_warp p] = myLucasKanade (im_template, im, mask)
 
 
 im_template_mask_vec = im_template(mask);
@@ -16,7 +16,9 @@ Y_coord_mask_vec = Y_coord(mask);
 
 % H_grad_x = [-1 0 1; -1 0 1; d-1 0 1];
 H_grad_x = [-1 0 1];
-H_grad_x = H_grad_x./norm(H_grad_x);
+H_grad_x = 0.5 .* H_grad_x;
+% H_grad_x = H_grad_x./norm(H_grad_x);
+
 H_grad_y = H_grad_x';
 
 % Compute gradient
@@ -24,6 +26,8 @@ im_grad_x = imfilter(im, H_grad_x);
 im_grad_y = imfilter(im, H_grad_y);
     
 delta_p_history = [];
+
+num_iterations = 0;
 
 while norm(delta_p) > 0.1
     
@@ -55,18 +59,39 @@ while norm(delta_p) > 0.1
     % Step 5 steepest image
     %arrayfun (@(ii) [im_grad_x_vec(ii), im_grad_y_vec(ii)] * J(:,:,ii), 1:3)
     steepest_descent_image = zeros(1,size(J,2), size(J,3));
-    for i = 1:size(J,3)
-        steepest_descent_image(:,:,i) = [im_grad_x_warp_mask_vec(i), im_grad_y_warp_mask_vec(i)] * J(:,:,i);
-    end
+%     for i = 1:size(J,3)
+%         steepest_descent_image(:,:,i) = [im_grad_x_warp_mask_vec(i), im_grad_y_warp_mask_vec(i)] * J(:,:,i);
+%     end
+    
+    steepest_descent_image(1,2,:) = reshape(im_grad_x_warp_mask_vec, 1, 1, []);
+    steepest_descent_image(1,3,:) = reshape(im_grad_y_warp_mask_vec, 1, 1, []);
+    steepest_descent_image(1,1,:) = J(1,1,:).*steepest_descent_image(1,2,:) + ...
+                                    J(2,1,:).*steepest_descent_image(1,3,:);
+    
 
     % imshow(mat2gray(reshape(steepest_descent_image(1,1,:), [256,256])))
 
     % Step 6 Compute hessian
-    H = zeros(size(J,2));
-    for i = 1:size(J,3)
-%         H = H + J(:,:,i)'*J(:,:,i);
-        H = H + steepest_descent_image(:,:,i)' * steepest_descent_image(:,:,i);
-    end
+%     H = zeros(size(J,2));
+%     for i = 1:size(J,3)
+% %         H = H + J(:,:,i)'*J(:,:,i);
+%         H = H + steepest_descent_image(:,:,i)' * steepest_descent_image(:,:,i);
+%     end
+
+    H = zeros(size(J,2), size(J,2), size(J,3));
+    H(1,1,:) = steepest_descent_image(1,1,:) .* steepest_descent_image(1,1,:);
+    H(1,2,:) = steepest_descent_image(1,1,:) .* steepest_descent_image(1,2,:);
+    H(1,3,:) = steepest_descent_image(1,1,:) .* steepest_descent_image(1,3,:);
+    
+    H(2,1,:) = H(1,2);
+    H(2,2,:) = steepest_descent_image(1,2,:) .* steepest_descent_image(1,2,:);
+    H(2,3,:) = steepest_descent_image(1,3,:) .* steepest_descent_image(1,3,:);
+    
+    H(3,1,:) = H(1,3);
+    H(3,2,:) = H(2,3);
+    H(3,3,:) = steepest_descent_image(1,3,:) .* steepest_descent_image(1,3,:);
+    
+    H = sum(H,3);
 
     % Step 7
     % tic
@@ -93,7 +118,7 @@ while norm(delta_p) > 0.1
 %     plot(delta_p_history(3,:), 'g');
 %     hold off
 %     
-%     disp(['error: ' num2str(sum(im_error_vec.^2))]);
+    disp(['error: ' num2str(sum(im_error_vec.^2))]);
 %     disp(p);
 % %     disp(delta_p);
 %     
@@ -101,6 +126,9 @@ while norm(delta_p) > 0.1
 % %     imshow([im_template_mask im_warp_mask]);
 %     imshow(mat2gray(im_template-im_warp));
 %     drawnow
+
+    num_iterations = num_iterations + 1;
+    disp(['iteration: ' num2str(num_iterations)]);
 end
 end
 
