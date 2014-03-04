@@ -110,6 +110,7 @@ im = imtransform(im_template, tform, ...
 mask = false(size(im_template));
 mask(50:200, 50:200) = true;
 
+tic
 myLucasKanade(im_template, im, mask)
-
+toc
 

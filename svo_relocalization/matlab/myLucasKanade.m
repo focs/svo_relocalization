@@ -70,14 +70,14 @@ while norm(delta_p) > 0.1
 
     % Step 7
     % tic
-    sum_xy = zeros(size(steepest_descent_image,2),1);
-    for i = 1:size(J,3)
-        sum_xy = sum_xy + steepest_descent_image(:,:,i)' .* im_error_vec(i);
-    end
+%     sum_xy = zeros(size(steepest_descent_image,2),1);
+%     for i = 1:size(J,3)
+%         sum_xy = sum_xy + steepest_descent_image(:,:,i)' .* im_error_vec(i);
+%     end
     % toc
 
-%     sum_xy = steepest_descent_image .* repmat(reshape(im_error_vec,1,1,[]), [1 size(steepest_descent_image,2)]);
-%     sum_xy = sum(sum_xy, 3);
+    sum_xy = steepest_descent_image .* repmat(reshape(im_error_vec,1,1,[]), [1 size(steepest_descent_image,2)]);
+    sum_xy = sum(sum_xy, 3)';
 
     % Step 8
     delta_p = -pinv(H) * sum_xy;
@@ -85,22 +85,22 @@ while norm(delta_p) > 0.1
     % Step 9
     p = p + delta_p;
     
-    delta_p_history = [delta_p_history delta_p];
-    figure(1);
-    plot(delta_p_history(1,:));
-    hold on
-    plot(delta_p_history(2,:), 'r');
-    plot(delta_p_history(3,:), 'g');
-    hold off
-    
-    disp(['error: ' num2str(sum(im_error_vec.^2))]);
-    disp(p);
-%     disp(delta_p);
-    
-    figure(2);
-%     imshow([im_template_mask im_warp_mask]);
-    imshow(mat2gray(im_template-im_warp));
-    drawnow
+%     delta_p_history = [delta_p_history delta_p];
+%     figure(1);
+%     plot(delta_p_history(1,:));
+%     hold on
+%     plot(delta_p_history(2,:), 'r');
+%     plot(delta_p_history(3,:), 'g');
+%     hold off
+%     
+%     disp(['error: ' num2str(sum(im_error_vec.^2))]);
+%     disp(p);
+% %     disp(delta_p);
+%     
+%     figure(2);
+% %     imshow([im_template_mask im_warp_mask]);
+%     imshow(mat2gray(im_template-im_warp));
+%     drawnow
 end
 end
 
