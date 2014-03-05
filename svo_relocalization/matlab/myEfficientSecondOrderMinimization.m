@@ -1,5 +1,5 @@
 
-function [im_warp p] = myLucasKanade (im_template, im, mask)
+function [im_warp p] = myEfficientSecondOrderMinimization (im_template, im, mask)
 
 
 im_template_mask_vec = im_template(mask);
@@ -7,23 +7,22 @@ im_template_mask_vec = im_template(mask);
 % Initial warp
 p = [0 0 0]';
 delta_p = [99 99 99]';
-
-
 % Compute pixel coordenates
 [X_coord Y_coord] = meshgrid(1:size(im,2), 1:size(im,1));
+% X_coord = X_coord - size(im,2)/2;
+% Y_coord = Y_coord - size(im,1)/2;
 X_coord_mask_vec = X_coord(mask);
 Y_coord_mask_vec = Y_coord(mask);
 
-% H_grad_x = [-1 0 1; -1 0 1; d-1 0 1];
 H_grad_x = [-1 0 1];
 H_grad_x = 0.5 .* H_grad_x;
-% H_grad_x = H_grad_x./norm(H_grad_x);
-
 H_grad_y = H_grad_x';
 
 % Compute gradient
-im_grad_x = imfilter(im, H_grad_x);
-im_grad_y = imfilter(im, H_grad_y);
+im_template_grad_x = imfilter(im_template, H_grad_x);
+im_template_grad_y = imfilter(im_template, H_grad_y);
+im_template_grad_x_mask_vec = im_template_grad_x(mask);
+im_template_grad_y_mask_vec = im_template_grad_y(mask);
     
 delta_p_history = [];
 error_history = [];
@@ -37,49 +36,43 @@ while norm(delta_p) > 0.1
     im_warp_mask_vec = im_warp(mask);
     
     % Step 2 compute error
-    im_error_vec = im_template_mask_vec - im_warp_mask_vec;    
+    im_error_vec = im_warp_mask_vec - im_template_mask_vec;    
     
-    % Step 3 warp gradient
-    im_grad_x_warp = getTransformedImage(im_grad_x, p);
-    im_grad_y_warp = getTransformedImage(im_grad_y, p);
-    
-    im_grad_x_warp_mask_vec = im_grad_x_warp(mask);
-    im_grad_y_warp_mask_vec = im_grad_y_warp(mask);
+    % Compute warped image gradient
+    im_warp_grad_x = imfilter(im_warp, H_grad_x);
+    im_warp_grad_y = imfilter(im_warp, H_grad_y);
 
-    % Step 4 evaluate Jacovian
+    im_warp_grad_x_mask_vec = im_warp_grad_x(mask);
+    im_warp_grad_y_mask_vec = im_warp_grad_y(mask);
+
+    % Eevaluate Jacovian
     % J = [-x*sin(p(1)) - y*cos(p(1)) 1 0;
     %      x*cos(p(1)) - y*sin(p(1)) 0 1];
 
-    J(1,1,:) = -X_coord_mask_vec.*sin(p(1)) + Y_coord_mask_vec*cos(p(1));
-    J(1,2,:) = 1;
-    J(1,3,:) = 0;
-    J(2,1,:) = -X_coord_mask_vec.*cos(p(1)) - Y_coord_mask_vec*sin(p(1));
-    J(2,2,:) = 0;
-    J(2,3,:) = 1;
+%     J(1,1,:) = -X_coord_mask_vec.*sin(p(1)) + Y_coord_mask_vec*cos(p(1));
+%     J(1,2,:) = 1;
+%     J(1,3,:) = 0;
+%     J(2,1,:) = -X_coord_mask_vec.*cos(p(1)) - Y_coord_mask_vec*sin(p(1));
+%     J(2,2,:) = 0;
+%     J(2,3,:) = 1;
 
-    % Step 5 steepest image
-    %arrayfun (@(ii) [im_grad_x_vec(ii), im_grad_y_vec(ii)] * J(:,:,ii), 1:3)
-    steepest_descent_image = zeros(1,size(J,2), size(J,3));
-%     for i = 1:size(J,3)
-%         steepest_descent_image(:,:,i) = [im_grad_x_warp_mask_vec(i), im_grad_y_warp_mask_vec(i)] * J(:,:,i);
-%     end
+    % steepest image
     
-    steepest_descent_image(1,2,:) = im_grad_x_warp_mask_vec(:);
-    steepest_descent_image(1,3,:) = im_grad_y_warp_mask_vec(:);
-    steepest_descent_image(1,1,:) = J(1,1,:).*steepest_descent_image(1,2,:) + ...
-                                    J(2,1,:).*steepest_descent_image(1,3,:);
+    % Calculate mean grad 0.5(f(0) + f(x))
+    mean_grad_x_mask_vec = 0.5*(im_warp_grad_x_mask_vec + im_template_grad_x_mask_vec);
+    mean_grad_y_mask_vec = 0.5*(im_warp_grad_y_mask_vec + im_template_grad_y_mask_vec);
     
-
+    steepest_descent_image = zeros(1,numel(p), numel(im_template_mask_vec));
+    steepest_descent_image(1,1,:) = +Y_coord_mask_vec.*mean_grad_x_mask_vec(:) ...
+                                    -X_coord_mask_vec.*mean_grad_y_mask_vec(:);
+    steepest_descent_image(1,2,:) = mean_grad_x_mask_vec(:);
+    steepest_descent_image(1,3,:) = mean_grad_y_mask_vec(:);
+    
+                                
     % imshow(mat2gray(reshape(steepest_descent_image(1,1,:), [256,256])))
 
-    % Step 6 Compute hessian
-%     H = zeros(size(J,2));
-%     for i = 1:size(J,3)
-% %         H = H + J(:,:,i)'*J(:,:,i);
-%         H = H + steepest_descent_image(:,:,i)' * steepest_descent_image(:,:,i);
-%     end
-
-    H = zeros(size(J,2), size(J,2), size(J,3));
+    % Compute hessian
+    H = zeros(numel(p), numel(p), numel(im_template_mask_vec));
     H(1,1,:) = steepest_descent_image(1,1,:) .* steepest_descent_image(1,1,:);
     H(1,2,:) = steepest_descent_image(1,1,:) .* steepest_descent_image(1,2,:);
     H(1,3,:) = steepest_descent_image(1,1,:) .* steepest_descent_image(1,3,:);
@@ -106,11 +99,12 @@ while norm(delta_p) > 0.1
     sum_xy = sum(sum_xy, 3)';
 
     % Step 8
-    delta_p = -pinv(H) * sum_xy;
+    delta_p = (pinv(H) * sum_xy)
     
     % Step 9
     p = p + delta_p;
-    
+    p
+
     delta_p_history = [delta_p_history delta_p];
     figure(1);
     plot(delta_p_history(1,:));
@@ -118,6 +112,7 @@ while norm(delta_p) > 0.1
     plot(delta_p_history(2,:), 'r');
     plot(delta_p_history(3,:), 'g');
     hold off
+    
     
     error_history = [error_history sum(im_error_vec.^2)];
     figure (3);
@@ -141,18 +136,14 @@ end
 
 
 
-function im_transformed = getTransformedImage (im, x)
-            
-alpha = x(1); % SE(2) Rotation
-t1 = x(2); % SE(2) first dimension translation
-t2 = x(3); % SE(2) second dimension translation
-%             intencity_offset = x(4);
+function im_transformed = getTransformedImage (im, p)
+
+T = [cos(p(1)) sin(p(1)) p(2); 
+     -sin(p(1)) cos(p(1)) p(3)];
+
 
 % Create SE(2) transform
-tform = maketform('affine', ...
-                    [cos(alpha) sin(alpha) t1; 
-                     -sin(alpha) cos(alpha) t2;
-                     0 0 1]'); 
+tform = maketform('affine', T'); 
 
 % Apply transform on the image
 %im_new_trans = imtransform(obj.im_new,tform);

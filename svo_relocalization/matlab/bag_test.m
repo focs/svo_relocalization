@@ -93,7 +93,7 @@ im_template = im2double(rgb2gray(imread('/opt/matlab2012a/toolbox/images/imdemos
 im_template = im2double((imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif')));
 
 % Image
-alpha = 0.01;
+alpha = 0.005;
 t1 = 5;
 t2 = -2;
 tform = maketform('affine', ...
@@ -106,16 +106,51 @@ im = imtransform(im_template, tform, ...
                 'XData',[1 size(im_template,2)],...
                 'YData',[1 size(im_template,1)]);
             
-% [p,I_roi,T_error]=LucasKanadeAffine(im,[0 0 0 0 0 0],im_template);
 
 mask = true(size(im_template));
 % mask(50:200, 50:200) = true;
 
-profile on
+% profile on
 tic
 [im_final p] = myLucasKanade(im_template, im, mask);
 toc
-profile off
+% profile off
+
+% Show results
+% subplot(2,1,1); imshow([im_template im im_final]);
+% subplot(2,1,2); imshow(mat2gray(im_final - im_template));
+
+disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
+
+%% 
+% Template image
+% close all
+clc
+
+im_template = im2double(rgb2gray(imread('/opt/matlab2012a/toolbox/images/imdemos/onion.png')));
+im_template = im2double((imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif')));
+
+% Image
+alpha = 0.01;
+t1 = -5;
+t2 = -5;
+tform = maketform('affine', ...
+                    [cos(alpha) sin(alpha) t1; 
+                     -sin(alpha) cos(alpha) t2;
+                     0 0 1]'); 
+        
+% Apply transform on the image
+im = imtransform(im_template, tform, ...
+                'XData',[1 size(im_template,2)],...
+                'YData',[1 size(im_template,1)]);
+            
+% [p,I_roi,T_error]=LucasKanadeAffine(im,[0 0 0 0 0 0],im_template);
+
+mask = false(size(im_template));
+mask(1:end, 1:end) = true;
+
+
+[im_final p] = myEfficientSecondOrderMinimization(im_template, im, mask);
 
 % Show results
 subplot(2,1,1); imshow([im_template im im_final]);
@@ -123,4 +158,7 @@ subplot(2,1,2); imshow(mat2gray(im_final - im_template));
 
 disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
 
- 
+
+
+
+
