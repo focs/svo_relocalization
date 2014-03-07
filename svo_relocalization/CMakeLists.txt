@@ -46,23 +46,25 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a cpp library
- add_library(svo_relocalization
-   src/img_align_se2.cpp
- )
- target_link_libraries(svo_relocalization
+LIST(APPEND MY_LINK_LIBS
   ${OpenCV_LIBRARIES}
   ${Sophus_LIBRARIES}
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
- )
+)
 
-## Declare a cpp executable
-# add_executable(nano_slam_relocalization_node src/nano_slam_relocalization_node.cpp)
+# Declare a cpp library
+add_library(svo_relocalization
+  src/img_align_se2.cpp
+)
+target_link_libraries(svo_relocalization
+  ${MY_LINK_LIBS}
+)
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(nano_slam_relocalization_node nano_slam_relocalization_generate_messages_cpp)
+# Declare a cpp executable
+add_executable(test1 src/test_main.cpp)
+
+target_link_libraries(test1 svo_relocalization)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nano_slam_relocalization_node

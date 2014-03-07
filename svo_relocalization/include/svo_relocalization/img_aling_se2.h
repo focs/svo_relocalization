@@ -9,12 +9,15 @@
 class SecondOrderMinimizationSE2 : public vk::NLLSSolver<3,Sophus::SE2>
 {
 public:
-  SecondOrderMinimizationSE2 ();
+  SecondOrderMinimizationSE2 (const cv::Mat& im, const cv::Mat& im_template);
   virtual ~SecondOrderMinimizationSE2 ();
 
 protected:
   virtual double
-  computeResiduals (const Sophus::SE2& model, bool linearize_system, bool compute_weight_scale = false);
+  computeResiduals (
+      const Sophus::SE2& model,
+      bool linearize_system,
+      bool compute_weight_scale = false);
 
   virtual int
   solve();
@@ -30,10 +33,10 @@ protected:
 
 private:
   /* data */
-  cv::Mat im;
-  cv::Mat im_template;
-  cv::Mat im_template_grad_x;
-  cv::Mat im_template_grad_y;
+  cv::Mat im_;
+  cv::Mat im_template_;
+  cv::Mat im_template_grad_x_;
+  cv::Mat im_template_grad_y_;
 
 };
 
