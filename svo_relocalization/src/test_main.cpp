@@ -13,7 +13,7 @@ int main(int argc, char const *argv[])
 
   printf("It does DO something!\n");
 
-  Sophus::SE2 my_translation (0, Eigen::Vector2d(1,0));
+  Sophus::SE2 my_translation (0.001, Eigen::Vector2d(5,0));
 
   cv::Mat test_image = cv::imread(
       "/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif", 
@@ -45,5 +45,6 @@ int main(int argc, char const *argv[])
 
   Sophus::SE2 initial_model (0, Eigen::Vector2d(0,0));
   my_minimizer.optimize(initial_model);
+  std::cout << "final model: " << initial_model << std::endl;
   return 0;
 }

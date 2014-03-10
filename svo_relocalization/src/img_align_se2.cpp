@@ -7,6 +7,7 @@
 #include <Eigen/Core>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
+
 #include <svo_relocalization/img_aling_se2.h>
 
 SecondOrderMinimizationSE2::SecondOrderMinimizationSE2 (const cv::Mat& im, const cv::Mat& im_template)
@@ -56,40 +57,46 @@ double SecondOrderMinimizationSE2::computeResiduals (
   {
     for (size_t u = 0; u < im_.cols; ++u)
     {
-      // Jacovian/Steepest image
-      // Angle ~ 0 so sin(0) = 0 and cos(0) = 1
-      // J(2) = (-xsin(a) + ycos(a))*grad_x + (-xcos(a) - ysin(a))*grad_y
-      Eigen::Vector3d J;
-      J(0) = im_grad_mean_x.at<float>(v,u);
-      J(1) = im_grad_mean_y.at<float>(v,u);
-      J(2) = v*im_grad_mean_x.at<float>(v,u) - u*im_grad_mean_y.at<float>(v,u); 
-
-      //printf("J angle: %f, x: %f, y: %f\n", J(0), J(1), J(2));
-      // Compute lower triangle of H
-      for (size_t i = 0; i < J.size(); ++i)
+      if (linearize_system)
       {
-        for (size_t j = 0; j <= i; ++j)
-        {
-          H_(i,j) += J(i) * J(j);
-        }
-      }
+        // Jacovian/Steepest image
+        // Angle ~ 0 so sin(0) = 0 and cos(0) = 1
+        // J(2) = (-xsin(a) + ycos(a))*grad_x + (-xcos(a) - ysin(a))*grad_y
+        Eigen::Vector3d J;
+        J(0) = im_grad_mean_x.at<float>(v,u);
+        J(1) = im_grad_mean_y.at<float>(v,u);
+        J(2) = v*im_grad_mean_x.at<float>(v,u) - u*im_grad_mean_y.at<float>(v,u); 
 
-      // Compute Jres
-      Jres_ += J*im_error.at<float>(v,u);
-      //printf("im error %f\n", im_error.at<float>(v,u));
-      //printf("Jres angle: %f, x: %f, y: %f\n", Jres_(0), Jres_(1), Jres_(2));
+        //printf("J angle: %f, x: %f, y: %f\n", J(0), J(1), J(2));
+        // Compute lower triangle of H
+        for (size_t i = 0; i < J.size(); ++i)
+        {
+          for (size_t j = 0; j <= i; ++j)
+          {
+            H_(i,j) += J(i) * J(j);
+          }
+        }
+
+        // Compute Jres
+        Jres_ += J*im_error.at<float>(v,u);
+        //printf("im error %f\n", im_error.at<float>(v,u));
+        //printf("Jres angle: %f, x: %f, y: %f\n", Jres_(0), Jres_(1), Jres_(2));
+      }
 
       // Compute total error
       chi2 += im_error.at<float>(v,u) * im_error.at<float>(v,u);
     }
   }
 
-  // Fill uper triangle of H
-  for (size_t i = 1; i < H_.cols(); ++i)
+  if (linearize_system)
   {
-    for (size_t j = 0; j < i; ++j)
+    // Fill uper triangle of H
+    for (size_t i = 1; i < H_.cols(); ++i)
     {
-      H_(j,i) = H_(i,j);
+      for (size_t j = 0; j < i; ++j)
+      {
+        H_(j,i) = H_(i,j);
+      }
     }
   }
 
