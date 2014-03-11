@@ -1,11 +1,14 @@
 
-#ifndef IMG_ALING_SE2_H
-#define IMG_ALING_SE2_H
+#ifndef SVO_RELOCALIZATION_IMG_ALING_SE2_H
+#define SVO_RELOCALIZATION_IMG_ALING_SE2_H
 
 #include <opencv2/opencv.hpp>
 #include <sophus/se2.h>
 #include <vikit/nlls_solver.h>
 
+namespace reloc
+{
+  
 class SecondOrderMinimizationSE2 : public vk::NLLSSolver<3,Sophus::SE2>
 {
 public:
@@ -40,6 +43,7 @@ private:
 
 };
 
+} /* reloc */ 
 
-#endif /* end of include guard: IMG_ALING_SE2_H */
+#endif /* end of include guard: SVO_RELOCALIZATION_IMG_ALING_SE2_H */
 

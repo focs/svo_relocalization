@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
 
   //waitKey(0);
 
-  SecondOrderMinimizationSE2 my_minimizer (test_image, im_warp);
+  reloc::SecondOrderMinimizationSE2 my_minimizer (test_image, im_warp);
 
   printf("nu_init: %f\n", my_minimizer.nu_init_);
   //printf("Image type: 

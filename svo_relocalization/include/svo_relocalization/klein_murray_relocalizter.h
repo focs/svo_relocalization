@@ -1,33 +1,48 @@
 
-#ifndef KLEIN_MURRAY_RELOCALIZER_H_LC4ZIRV5
-#define KLEIN_MURRAY_RELOCALIZER_H_LC4ZIRV5
+#ifndef SVO_RELOCALIZATION_KLEIN_MURRAY_RELOCALIZER_H_LC4ZIRV5
+#define SVO_RELOCALIZATION_KLEIN_MURRAY_RELOCALIZER_H_LC4ZIRV5
 
 #include <list>
 
-#include <svo_relocalization/virtual_relocalizer.h>
+#include <svo_relocalization/abstract_relocalizer.h>
 
-class KMRelocalizer : VirtualRelocalizer
+namespace reloc
 {
-  typedef std::pair<cv::Mat, Sophus::SE3> ImagePose;
+
+/// Implementation of a relocalizer using the technique from Klein and Murray
+class KMRelocalizer : AbstractRelocalizer
+{
 
 public:
   KMRelocalizer ();
   virtual ~KMRelocalizer ();
 
-  void addFrame(const cv::Mat& img, const Sophus::SE3& pose, int id);
+  void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_wordl, int id);
 
   bool relocalize(
-      const cv::Mat& img,
-      const Sophus::SE3& last_pose,
-      Sophus::SE3& pose_out,
+      const std::vector<cv::Mat>& query_img_pyr,
+      const Sophus::SE3& T_frame_world_estimate,
+      Sophus::SE3& T_frame_wordl_out,
       int& id_out);
 
 private:
-  /// Find best match with small blured images
-  ImagePose& findBestMatch(const cv::Mat& queryImage);
+  /// Structure used to save data in a std::list
+  struct ImagePoseId
+  {
+    cv::Mat image;
+    Sophus::SE3 T_f_w;
+    int id;
+  };
 
-  std::list<ImagePose> images_; //<! List of images included so far
+  /// Find best match with small blured images
+  ImagePoseId& findBestMatch(const cv::Mat& queryImage);
+  /// Convert to "small blury image"
+  cv::Mat convertToSmallBluryImage(const cv::Mat& img);
+
+  std::list<ImagePoseId> images_; //<! List of images included so far with its pose and id
 };
 
-#endif /* end of include guard: KLEIN_MURRAY_RELOCALIZER_H_LC4ZIRV5 */
+  
+} /* reloc */ 
+#endif /* end of include guard: SVO_RELOCALIZATION_KLEIN_MURRAY_RELOCALIZER_H_LC4ZIRV5 */
 

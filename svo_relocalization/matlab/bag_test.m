@@ -147,7 +147,7 @@ im = imtransform(im_template, tform, ...
 % [p,I_roi,T_error]=LucasKanadeAffine(im,[0 0 0 0 0 0],im_template);
 
 mask = false(size(im_template));
-mask(1:end, 1:end) = true;
+mask(2:end, 2:end) = true;
 
 
 [im_final p] = myEfficientSecondOrderMinimization(im_template, im, mask);

@@ -10,6 +10,9 @@
 
 #include <svo_relocalization/img_aling_se2.h>
 
+namespace reloc
+{
+  
 SecondOrderMinimizationSE2::SecondOrderMinimizationSE2 (const cv::Mat& im, const cv::Mat& im_template)
 {
   im.copyTo(im_);
@@ -132,6 +135,8 @@ void SecondOrderMinimizationSE2::finishIteration()
 {
   printf("Finish Iteration\n");
 }
+
+} /* reloc */ 
 
 #endif /* end of include guard: IMG_ALIGN_SE2_CPP */
 
