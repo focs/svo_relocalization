@@ -73,7 +73,7 @@ bool KMRelocalizer::relocalize(
 
 }
 
-KMRelocalizer::ImagePoseId& KMRelocalizer::findBestMatch(const cv::Mat& queryImage)
+KMRelocalizer::ImagePoseId KMRelocalizer::findBestMatch(const cv::Mat& queryImage)
 {
   std::list<ImagePoseId>::iterator image_it;
   std::list<ImagePoseId>::iterator best_pair = images_.begin();

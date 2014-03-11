@@ -23,7 +23,7 @@ public:
       const std::vector<cv::Mat>& query_img_pyr,
       const Sophus::SE3& T_frame_world_estimate,
       Sophus::SE3& T_frame_wordl_out,
-      int& id_out);
+     int& id_out);
 
 private:
   /// Structure used to save data in a std::list
@@ -35,7 +35,7 @@ private:
   };
 
   /// Find best match with small blured images
-  ImagePoseId& findBestMatch(const cv::Mat& queryImage);
+  ImagePoseId findBestMatch(const cv::Mat& queryImage);
   /// Convert to "small blury image"
   cv::Mat convertToSmallBluryImage(const cv::Mat& img);
 

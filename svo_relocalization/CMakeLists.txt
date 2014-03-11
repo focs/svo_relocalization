@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(svo_relocalization)
 
+set(CMAKE_BUILD_TYPE Debug)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -63,9 +64,11 @@ target_link_libraries(svo_relocalization
 )
 
 # Declare a cpp executable
-add_executable(test1 src/test_main.cpp)
+add_executable(test_aligment src/test_main.cpp)
+target_link_libraries(test_aligment svo_relocalization)
 
-target_link_libraries(test1 svo_relocalization)
+add_executable(test_relocalizer src/test_relocalization.cpp)
+target_link_libraries(test_relocalizer svo_relocalization)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nano_slam_relocalization_node
