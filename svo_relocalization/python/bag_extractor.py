@@ -16,11 +16,11 @@ for topic, msg, t in bag.read_messages(topics=['/nanoslam/dense_input']):
     msg.pose.position.x,
     msg.pose.position.y,
     msg.pose.position.z,
-    msg.pose.orientation.w,
     msg.pose.orientation.x,
     msg.pose.orientation.y,
-    msg.pose.orientation.z])
+    msg.pose.orientation.z,
+    msg.pose.orientation.w])
   
 # save poses in a file [id x y z rx ry rz]
-np.savetxt('/tmp/pose.txt', pose, ['%d', '%f', '%f','%f','%f','%f','%f','%f'])
+np.savetxt('/tmp/pose.txt', pose, ['%d', '%f', '%f', '%f', '%f', '%f', '%f', '%f'])
 bag.close()
