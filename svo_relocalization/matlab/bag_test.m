@@ -124,39 +124,82 @@ disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
 
 %% 
 % Template image
-% close all
+close all
 clc
 
 im_template = im2double(rgb2gray(imread('/opt/matlab2012a/toolbox/images/imdemos/onion.png')));
 im_template = im2double((imread('/opt/matlab2012a/toolbox/images/imdemos/cameraman.tif')));
 
 % Image
-alpha = 0.01;
-t1 = -5;
-t2 = -5;
-tform = maketform('affine', ...
-                    [cos(alpha) sin(alpha) t1; 
-                     -sin(alpha) cos(alpha) t2;
-                     0 0 1]'); 
-        
-% Apply transform on the image
-im = imtransform(im_template, tform, ...
-                'XData',[1 size(im_template,2)],...
-                'YData',[1 size(im_template,1)]);
-            
-% [p,I_roi,T_error]=LucasKanadeAffine(im,[0 0 0 0 0 0],im_template);
+alpha = 0.1;
+t1 = 0;
+t2 = 0;
+
+im = transformImageSE2(im_template, [alpha t1 t2]);
 
 mask = false(size(im_template));
-mask(2:end, 2:end) = true;
+% mask(50:end-50, 50:end-50) = true;
+mask(5:end-5, 5:end-5) = true;
+
+tic
+[im_final ESM_p ESM_error_vec ESM_p_vec ESM_delta_vec] = myEfficientSecondOrderMinimization(im_template, im, mask);
+ESM_time=toc;
+ESM_p
+tic
+% [im_final LK_p LK_error_vec LK_p_vec LK_delta_vec] = myLucasKanade(im_template, im, mask);
+LK_time = toc;
+
+figure
+plot(ESM_error_vec)
+hold on
+% plot(LK_error_vec, 'r')
+hold off
+legend(['ESP, time: ' num2str(ESM_time, '%2.3f')], ['LK, time: ' num2str(LK_time, '%2.3f')])
+xlabel('Iteration')
+ylabel('SSD error')
+title(['Image aligment with tx ' num2str(t1) ' ty ' num2str(t2) ' and rotation ' num2str(alpha)]);
+
+figure
+plot(ESM_delta_vec(1,:));
+hold on
+plot(ESM_delta_vec(2,:), 'r');
+plot(ESM_delta_vec(3,:), 'g');
+hold off
+title('ESP delta hist')
+
+% figure
+% plot(LK_delta_vec(1,:));
+% hold on
+% plot(LK_delta_vec(2,:), 'r');
+% plot(LK_delta_vec(3,:), 'g');
+% hold off
+% title('LK delta hist')
+    
+
+figure
+plot(ESM_p_vec(1,:));
+hold on
+plot(ESM_p_vec(2,:), 'r');
+plot(ESM_p_vec(3,:), 'g');
+hold off
+title('ESP p hist')
+
+% figure
+% plot(LK_p_vec(1,:));
+% hold on
+% plot(LK_p_vec(2,:), 'r');
+% plot(LK_p_vec(3,:), 'g');
+% hold off
+% title('LK p hist')
+    
 
 
-[im_final p] = myEfficientSecondOrderMinimization(im_template, im, mask);
 
 % Show results
-subplot(2,1,1); imshow([im_template im im_final]);
-subplot(2,1,2); imshow(mat2gray(im_final - im_template));
-
-disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
+% subplot(2,1,1); imshow([im_template im im_final]);
+% subplot(2,1,2); imshow(mat2gray(im_final - im_template));
+% 
+% disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
 
 
 
