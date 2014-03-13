@@ -35,7 +35,7 @@ private:
   };
 
   /// Find best match with small blured images
-  ImagePoseId findBestMatch(const cv::Mat& queryImage);
+  ImagePoseId& findBestMatch(const cv::Mat& queryImage);
   /// Convert to "small blury image"
   cv::Mat convertToSmallBluryImage(const cv::Mat& img);
 
