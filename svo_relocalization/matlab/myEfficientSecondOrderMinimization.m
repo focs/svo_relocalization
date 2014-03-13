@@ -1,5 +1,5 @@
 
-function [im_warp p] = myEfficientSecondOrderMinimization (im_template, im, mask)
+function [im_warp p error_history p_hist delta_p_history] = myEfficientSecondOrderMinimization (im_template, im, mask)
 
 
 im_template_mask_vec = im_template(mask);
@@ -8,7 +8,8 @@ im_template_mask_vec = im_template(mask);
 p = [0 0 0]';
 delta_p = [99 99 99]';
 % Compute pixel coordenates
-[X_coord Y_coord] = meshgrid(1:size(im,2), 1:size(im,1));
+im_center = size(im)/2;
+[X_coord Y_coord] = meshgrid(-im_center(2):im_center(2)-1, -im_center(1):im_center(1)-1);
 % X_coord = X_coord - size(im,2)/2;
 % Y_coord = Y_coord - size(im,1)/2;
 X_coord_mask_vec = X_coord(mask);
@@ -24,6 +25,7 @@ im_template_grad_y = imfilter(im_template, H_grad_y);
 im_template_grad_x_mask_vec = im_template_grad_x(mask);
 im_template_grad_y_mask_vec = im_template_grad_y(mask);
     
+p_hist = [];
 delta_p_history = [];
 error_history = [];
 
@@ -32,7 +34,7 @@ num_iterations = 0;
 while norm(delta_p) > 0.1
 %     tic
     % Step 1 apply warp
-    im_warp = getTransformedImage(im, p);
+    im_warp = transformImageSE2(im, p);
     im_warp_mask_vec = im_warp(mask);
     
     % Step 2 compute error
@@ -65,6 +67,8 @@ while norm(delta_p) > 0.1
     steepest_descent_image = zeros(1,numel(p), numel(im_template_mask_vec));
     steepest_descent_image(1,1,:) = +Y_coord_mask_vec.*mean_grad_x_mask_vec(:) ...
                                     -X_coord_mask_vec.*mean_grad_y_mask_vec(:);
+    steepest_descent_image(1,1,:) = (-X_coord_mask_vec.*sin(p(1)) + Y_coord_mask_vec*cos(p(1))).*mean_grad_x_mask_vec(:) +...
+                                    (-X_coord_mask_vec.*cos(p(1)) - Y_coord_mask_vec*sin(p(1))).*mean_grad_y_mask_vec(:);
     steepest_descent_image(1,2,:) = mean_grad_x_mask_vec(:);
     steepest_descent_image(1,3,:) = mean_grad_y_mask_vec(:);
     
@@ -99,56 +103,41 @@ while norm(delta_p) > 0.1
     sum_xy = sum(sum_xy, 3)';
 
     % Step 8
-    delta_p = (pinv(H) * sum_xy)
+    delta_p = (pinv(H) * sum_xy);
     
     % Step 9
     p = p + delta_p;
-    p
+    
+    p_hist = [p_hist p];
 
     delta_p_history = [delta_p_history delta_p];
-    figure(1);
-    plot(delta_p_history(1,:));
-    hold on
-    plot(delta_p_history(2,:), 'r');
-    plot(delta_p_history(3,:), 'g');
-    hold off
+%     figure(1);
+%     plot(delta_p_history(1,:));
+%     hold on
+%     plot(delta_p_history(2,:), 'r');
+%     plot(delta_p_history(3,:), 'g');
+%     hold off
     
     
     error_history = [error_history sum(im_error_vec.^2)];
-    figure (3);
-    plot(error_history);
+%     figure (3);
+%     plot(error_history);
+% %     
+%     disp(['error: ' num2str(sum(im_error_vec.^2))]);
+% %     disp(p);
+% % %     disp(delta_p);
+% %     
+%     figure(2);
+% %     imshow([im_template im_warp]);
+%     imshow(mat2gray(im_template-im_warp));
+%     drawnow
+% %     toc
+%     num_iterations = num_iterations + 1;
+%     disp(['iteration: ' num2str(num_iterations)]);
 %     
-    disp(['error: ' num2str(sum(im_error_vec.^2))]);
-%     disp(p);
-% %     disp(delta_p);
-%     
-    figure(2);
-%     imshow([im_template im_warp]);
-    imshow(mat2gray(im_template-im_warp));
-    drawnow
-%     toc
-    num_iterations = num_iterations + 1;
-    disp(['iteration: ' num2str(num_iterations)]);
-    
 %     pause
 end
 end
 
 
 
-function im_transformed = getTransformedImage (im, p)
-
-T = [cos(p(1)) sin(p(1)) p(2); 
-     -sin(p(1)) cos(p(1)) p(3)];
-
-
-% Create SE(2) transform
-tform = maketform('affine', T'); 
-
-% Apply transform on the image
-%im_new_trans = imtransform(obj.im_new,tform);
-im_transformed = imtransform(im, tform, ...
-    'XData',[1 size(im,2)],...
-    'YData',[1 size(im,1)]);
-            
-end
