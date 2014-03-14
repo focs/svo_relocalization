@@ -70,6 +70,9 @@ target_link_libraries(test_aligment svo_relocalization)
 add_executable(test_relocalizer src/test_relocalization.cpp)
 target_link_libraries(test_relocalizer svo_relocalization)
 
+add_executable(test_confusion_matrix src/test_confusion_matrix.cpp)
+target_link_libraries(test_confusion_matrix svo_relocalization)
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nano_slam_relocalization_node
 #   ${catkin_LIBRARIES}

@@ -22,9 +22,10 @@ void readMatrixFromFile (vector<cv::Mat>& images, vector<Sophus::SE3>& poses, ve
   float x, y, z;
   float rw, rx, ry, rz;
 
-  //while (!file_in.eof())
-  //{
-    file_in >> id >> x >> y >> z >> rw >> rx >> ry >> rz;
+  while (!file_in.eof())
+  //for (size_t i = 0; i < 100; ++i)
+  {
+    file_in >> id >> x >> y >> z >>  rx >> ry >> rz >> rw;
     
     stringstream filename;
     filename << path << "image" << id << ".png";
@@ -37,7 +38,9 @@ void readMatrixFromFile (vector<cv::Mat>& images, vector<Sophus::SE3>& poses, ve
     poses.push_back(Sophus::SE3(q, t));
 
     ids.push_back(id);
-  //}
+  }
+
+  file_in.close();
 }
 
 int main(int argc, char const *argv[])
@@ -53,15 +56,19 @@ int main(int argc, char const *argv[])
 
 
   KMRelocalizer relocalizer;
+  int query_idx = 253;
 
-  for (size_t i = 0; i < 1; i+=10)
+  for (size_t i = 0; i < images.size(); i+=1)
   {
-    vector<cv::Mat> tmp_vector;
-    tmp_vector.push_back(images.at(i));
-    relocalizer.addFrame(tmp_vector, poses[i], ids[i]);
+    if (i != query_idx)
+    {
+      vector<cv::Mat> tmp_vector;
+      tmp_vector.push_back(images.at(i));
+      relocalizer.addFrame(tmp_vector, poses[i], ids[i]);
+    }
   }
 
-  int query_idx = 0;
+  cout << "Query image id: " << ids.at(query_idx) << endl;
   vector<cv::Mat> tmp_vector;
   tmp_vector.push_back(images.at(query_idx));
   Sophus::SE3 T_f_out;

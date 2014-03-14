@@ -1,5 +1,5 @@
 
-function [im_warp p] = myLucasKanade (im_template, im, mask)
+function [im_warp p error_history p_hist delta_p_history] = myLucasKanade (im_template, im, mask)
 
 
 im_template_mask_vec = im_template(mask);
@@ -10,7 +10,8 @@ delta_p = [99 99 99]';
 
 
 % Compute pixel coordenates
-[X_coord Y_coord] = meshgrid(1:size(im,2), 1:size(im,1));
+im_center = size(im)/2;
+[X_coord Y_coord] = meshgrid(-im_center(2):im_center(2)-1, -im_center(1):im_center(1)-1);
 X_coord_mask_vec = X_coord(mask);
 Y_coord_mask_vec = Y_coord(mask);
 
@@ -25,6 +26,7 @@ H_grad_y = H_grad_x';
 im_grad_x = imfilter(im, H_grad_x);
 im_grad_y = imfilter(im, H_grad_y);
     
+p_hist = [];
 delta_p_history = [];
 error_history = [];
 
@@ -33,15 +35,15 @@ num_iterations = 0;
 while norm(delta_p) > 0.1
 %     tic
     % Step 1 apply warp
-    im_warp = getTransformedImage(im, p);
+    im_warp = transformImageSE2(im, p);
     im_warp_mask_vec = im_warp(mask);
     
     % Step 2 compute error
     im_error_vec = im_template_mask_vec - im_warp_mask_vec;    
     
     % Step 3 warp gradient
-    im_grad_x_warp = getTransformedImage(im_grad_x, p);
-    im_grad_y_warp = getTransformedImage(im_grad_y, p);
+    im_grad_x_warp = transformImageSE2(im_grad_x, p);
+    im_grad_y_warp = transformImageSE2(im_grad_y, p);
     
     im_grad_x_warp_mask_vec = im_grad_x_warp(mask);
     im_grad_y_warp_mask_vec = im_grad_y_warp(mask);
@@ -111,53 +113,31 @@ while norm(delta_p) > 0.1
     % Step 9
     p = p + delta_p;
     
+p_hist = [p_hist p];
     delta_p_history = [delta_p_history delta_p];
-    figure(1);
-    plot(delta_p_history(1,:));
-    hold on
-    plot(delta_p_history(2,:), 'r');
-    plot(delta_p_history(3,:), 'g');
-    hold off
+%     figure(1);
+%     plot(delta_p_history(1,:));
+%     hold on
+%     plot(delta_p_history(2,:), 'r');
+%     plot(delta_p_history(3,:), 'g');
+%     hold off
     
     error_history = [error_history sum(im_error_vec.^2)];
-    figure (3);
-    plot(error_history);
+%     figure (3);
+%     plot(error_history);
 %     
     disp(['error: ' num2str(sum(im_error_vec.^2))]);
 %     disp(p);
 % %     disp(delta_p);
 %     
-    figure(2);
-%     imshow([im_template im_warp]);
-    imshow(mat2gray(im_template-im_warp));
-    drawnow
+%     figure(2);
+% %     imshow([im_template im_warp]);
+%     imshow(mat2gray(im_template-im_warp));
+%     drawnow
 %     toc
     num_iterations = num_iterations + 1;
     disp(['iteration: ' num2str(num_iterations)]);
     
 %     pause
 end
-end
-
-
-
-function im_transformed = getTransformedImage (im, x)
-            
-alpha = x(1); % SE(2) Rotation
-t1 = x(2); % SE(2) first dimension translation
-t2 = x(3); % SE(2) second dimension translation
-%             intencity_offset = x(4);
-
-% Create SE(2) transform
-tform = maketform('affine', ...
-                    [cos(alpha) sin(alpha) t1; 
-                     -sin(alpha) cos(alpha) t2;
-                     0 0 1]'); 
-
-% Apply transform on the image
-%im_new_trans = imtransform(obj.im_new,tform);
-im_transformed = imtransform(im, tform, ...
-    'XData',[1 size(im,2)],...
-    'YData',[1 size(im,1)]);
-            
 end

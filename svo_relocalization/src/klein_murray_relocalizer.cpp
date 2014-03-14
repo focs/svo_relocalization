@@ -48,9 +48,12 @@ bool KMRelocalizer::relocalize(
   
   // Find best transformation between current frame and best match
   // Model is from img to best_match
+  //std::cout << "query image: " << query_img << std::endl;
+  //std::cout << "best match image: " << best_match.image << std::endl;
   SecondOrderMinimizationSE2 motion_estimator(query_img, best_match.image);
   // Model set to 0
   Sophus::SE2 T_template_query;
+  //std::cout << "Template transformation: " << T_template_query << std::endl;
   motion_estimator.optimize(T_template_query);
 
   // convert se2 to se3 with xy translation and rotation over z axes
@@ -71,9 +74,12 @@ bool KMRelocalizer::relocalize(
   T_frame_wordl_out = Sophus::SE3::exp(se3_values).inverse() * best_match.T_f_w;
   id_out = best_match.id;
 
+  // For now
+  return true;
+
 }
 
-KMRelocalizer::ImagePoseId KMRelocalizer::findBestMatch(const cv::Mat& queryImage)
+KMRelocalizer::ImagePoseId& KMRelocalizer::findBestMatch(const cv::Mat& queryImage)
 {
   std::list<ImagePoseId>::iterator image_it;
   std::list<ImagePoseId>::iterator best_pair = images_.begin();
@@ -88,18 +94,24 @@ KMRelocalizer::ImagePoseId KMRelocalizer::findBestMatch(const cv::Mat& queryImag
 
     if (diff < best_diff)
     {
+      //std::cout << "best diff: " << diff << std::endl;
       best_diff = diff;
-      best_pair = best_pair;
+      best_pair = image_it;
     }
   }
+
+  //std::cout << "best match id: " << best_pair->id << std::endl;
+
+  return *best_pair;
 }
 
 cv::Mat KMRelocalizer::convertToSmallBluryImage(const cv::Mat& img)
 {
+  cv::Mat im_float;
+  img.convertTo(im_float, CV_32F);
   // Downsample image
   cv::Mat im_small;
-  // Not sure which image should be use yet. Talking first one
-  cv::resize(img, im_small, cv::Size(40,30));
+  cv::resize(im_float, im_small, cv::Size(40,30));
 
   // Blur image
   cv::Mat im_small_blur;

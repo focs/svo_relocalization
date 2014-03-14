@@ -6,6 +6,7 @@
 
 #include <svo_relocalization/abstract_relocalizer.h>
 
+class TestConMatKMRelocalizer;
 namespace reloc
 {
 
@@ -25,7 +26,11 @@ public:
       Sophus::SE3& T_frame_wordl_out,
      int& id_out);
 
+  // Friend test class (allow access private atributes, methods and datastructures)
+  friend class ::TestConMatKMRelocalizer;
+
 private:
+
   /// Structure used to save data in a std::list
   struct ImagePoseId
   {
