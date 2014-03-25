@@ -11,23 +11,6 @@ using namespace Eigen;
 int main(int argc, char *argv[])
 {
   typedef Matrix<double,2,3> Matrix23d;
-  // set up generator matrices for SO3
-  Matrix3d generators [3];
-  generators[0].setZero();
-  generators[1].setZero();
-  generators[2].setZero();
-
-  generators[0](1,2) = -1;
-  generators[0](2,1) = 1;
-  generators[1](0,2) = 1;
-  generators[1](2,0) = -1;
-  generators[2](0,1) = -1;
-  generators[2](1,0) = 1;
-
-  cout << generators[0] << endl;
-  cout << generators[1] << endl;
-  cout << generators[2] << endl;
-
 
   // Camera intrinsic parameters 
   float cam_width = 752;
