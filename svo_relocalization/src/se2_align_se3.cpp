@@ -4,7 +4,7 @@
 namespace reloc
 {
   
-SE2toSE3::SE2toSE3 (const Sophus::SE2& SE2_model, LocalCameraModel *camera_model) :
+SE2toSE3::SE2toSE3 (const Sophus::SE2& SE2_model, vk::AbstractCamera *camera_model) :
   camera_model_(camera_model)
 {
 
@@ -46,26 +46,29 @@ double SE2toSE3::computeResiduals (
 
     px_error = px_trans_[p_idx] - px_rot;
 
-    // Derivative of \pi
-    Matrix23d d_pi;
-    d_pi << 1,0,-uv_rot[0]/uv_rot[2],
-         0,1,-uv_rot[1]/uv_rot[2];
-
-    Eigen::Matrix2d focal_mat;
-    focal_mat.setZero();
-    // Focal divided by z
-    focal_mat.diagonal().setConstant(camera_model_->errorMultiplier2()/uv_rot[2]);
-    d_pi = focal_mat * d_pi;
-
-    Matrix23d Jac;
-    // For the three generators
-    for (size_t g_idx = 0; g_idx < 3; ++g_idx)
+    if (linearize_system)
     {
-      // Jacobian
-      Jac.col(g_idx) = -d_pi * Sophus::SO3().generator(g_idx)*uv_rot;
+      // Derivative of \pi
+      Matrix23d d_pi;
+      d_pi << 1,0,-uv_rot[0]/uv_rot[2],
+           0,1,-uv_rot[1]/uv_rot[2];
 
-      H_ += Jac.transpose() * Jac;
-      Jres_ += Jac.transpose() * px_error;
+      Eigen::Matrix2d focal_mat;
+      focal_mat.setZero();
+      // Focal divided by z
+      focal_mat.diagonal().setConstant(camera_model_->errorMultiplier2()/uv_rot[2]);
+      d_pi = focal_mat * d_pi;
+
+      Matrix23d Jac;
+      // For the three generators
+      for (size_t g_idx = 0; g_idx < 3; ++g_idx)
+      {
+        // Jacobian
+        Jac.col(g_idx) = -d_pi * Sophus::SO3().generator(g_idx)*uv_rot;
+
+        H_ += Jac.transpose() * Jac;
+        Jres_ += Jac.transpose() * px_error;
+      }
     }
   }
 

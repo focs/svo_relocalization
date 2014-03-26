@@ -15,11 +15,8 @@ namespace reloc
 class SE2toSE3 : public vk::NLLSSolver <3,Sophus::SE3>
 {
 
-private:
-  typedef vk::AbstractCamera LocalCameraModel;
-
 public:
-  SE2toSE3 (const Sophus::SE2& SE2_model, LocalCameraModel *camera_model);
+  SE2toSE3 (const Sophus::SE2& SE2_model, vk::AbstractCamera *camera_model);
   virtual ~SE2toSE3 () {};
 
 protected:
@@ -36,7 +33,7 @@ protected:
   update(const Sophus::SE3& old_model,  Sophus::SE3& new_model);
 
 private:
-  LocalCameraModel *camera_model_;
+  vk::AbstractCamera *camera_model_;
   Eigen::Vector2d px_trans_ [2]; //! pixel points with SE2 transform
   Eigen::Vector3d uv_ [2]; //! px points on image plane coordinates (no transforma)
 
