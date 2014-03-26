@@ -25,7 +25,7 @@ SecondOrderMinimizationSE2::SecondOrderMinimizationSE2 (const cv::Mat& im, const
   cv::Sobel(im_template_, im_template_grad_x_, CV_32F, 1, 0, 1);
   cv::Sobel(im_template_, im_template_grad_y_, CV_32F, 0, 1, 1);
 
-  method_ = SecondOrderMinimizationSE2::GaussNewton;
+  //method_ = SecondOrderMinimizationSE2::GaussNewton;
 
 }
 
@@ -39,7 +39,7 @@ double SecondOrderMinimizationSE2::computeResiduals (
     bool linearize_system, 
     bool compute_weight_scale)
 {
-  std::cout << "Current model" << std::endl << model << std::endl;
+  //std::cout << "Current model" << std::endl << model << std::endl;
 
   Sophus::SE2 center_translation (0, Eigen::Vector2d(-im_.cols/2, -im_.rows/2));
   Sophus::SE2 temp_model = center_translation.inverse() * model * center_translation;
@@ -134,7 +134,7 @@ int SecondOrderMinimizationSE2::solve()
   x_ = H_.ldlt().solve(-Jres_);
   //printf("Jres angle: %f, x: %f, y: %f\n", Jres_(0), Jres_(1), Jres_(2));
   //printf("angle: %f, x: %f, y: %f\n", x_(0), x_(1), x_(2));
-  std::cout << "X: " << x_ << std::endl;
+  //std::cout << "X: " << x_ << std::endl;
   //std::cout << H_ << std::endl;
   return 1;
 }  
@@ -149,12 +149,12 @@ void SecondOrderMinimizationSE2::update(
 
 void SecondOrderMinimizationSE2::startIteration()
 {
-  printf("Starting Iteratin\n");
+  //printf("Starting Iteratin\n");
 }
 
 void SecondOrderMinimizationSE2::finishIteration()
 {
-  printf("Finish Iteration\n");
+  //printf("Finish Iteration\n");
 }
 
 } /* reloc */ 

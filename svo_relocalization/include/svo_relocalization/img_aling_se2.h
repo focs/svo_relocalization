@@ -15,6 +15,7 @@ public:
   SecondOrderMinimizationSE2 (const cv::Mat& im, const cv::Mat& im_template);
   virtual ~SecondOrderMinimizationSE2 ();
 
+
 protected:
   virtual double
   computeResiduals (
