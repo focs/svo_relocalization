@@ -5,6 +5,7 @@
 #include <sstream>
 #include <Eigen/Core>
 #include <sophus/se3.h>
+#include <vikit/atan_camera.h>
 #include <svo_relocalization/klein_murray_relocalizter.h>
 
 using namespace std;
@@ -45,7 +46,18 @@ void readMatrixFromFile (vector<cv::Mat>& images, vector<Sophus::SE3>& poses, ve
 
 int main(int argc, char const *argv[])
 {
-  
+  // Camera intrinsic parameters 
+  float cam_width = 752;
+  float cam_height = 480;
+  Vector2d cam_size (cam_width, cam_height);
+  float cam_fx = 0.582533;
+  float cam_fy = 0.910057;
+  float cam_cx = 0.510927;
+  float cam_cy = 0.526193;
+  float cam_d0 = 0.916379;
+
+  vk::ATANCamera my_camera (cam_width, cam_height, cam_fx, cam_fy, cam_cx, cam_cy, cam_d0); 
+
   vector<cv::Mat> images;
   vector<Sophus::SE3> poses;
   vector<int> ids;
@@ -55,7 +67,7 @@ int main(int argc, char const *argv[])
   cout << "Image size: " << images[0].size() << endl;
 
 
-  KMRelocalizer relocalizer;
+  KMRelocalizer relocalizer(&my_camera);
   int query_idx = 253;
 
   for (size_t i = 0; i < images.size(); i+=1)
