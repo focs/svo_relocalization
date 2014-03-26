@@ -122,7 +122,7 @@ toc
 
 disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
 
-%% 
+%% ESM
 % Template image
 close all
 clc
@@ -201,7 +201,17 @@ title('ESP p hist')
 % 
 % disp(['error: ' num2str(sum((im_final(:) - im_template(:)).^2))]);
 
+%% Test with real data
 
+im_template = im2double(imread('~/catkin_ws/src/svo_relocalization/test_data/image4902.png'));
+im_query = im2double(imread('~/catkin_ws/src/svo_relocalization/test_data/image4907.png'));
+mask = true(size(im_template));
+[im_final ESM_p ESM_error_vec ESM_p_vec ESM_delta_vec] = myEfficientSecondOrderMinimization(im_template, im_query, mask);
 
+figure
+plot(ESM_error_vec)
 
+figure
+subplot(2,1,1); imshow([im_template im_query im_final]);
+subplot(2,1,2); imshow(mat2gray(im_final - im_template));
 

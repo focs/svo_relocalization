@@ -7,7 +7,8 @@ set(CMAKE_BUILD_TYPE Debug)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  vikit
+  vikit_common
+  vikit_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,19 +59,23 @@ LIST(APPEND MY_LINK_LIBS
 add_library(svo_relocalization
   src/img_align_se2.cpp
   src/klein_murray_relocalizer.cpp
+  ./src/se2_align_se3.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}
 )
 
 # Declare a cpp executable
-add_executable(test_aligment src/test_main.cpp)
+add_executable(test_aligment src/test/test_aligment.cpp)
 target_link_libraries(test_aligment svo_relocalization)
 
-add_executable(test_relocalizer src/test_relocalization.cpp)
+add_executable(test_aligment2 src/test/test_aligment2.cpp)
+target_link_libraries(test_aligment2 svo_relocalization)
+
+add_executable(test_relocalizer src/test/test_relocalization.cpp)
 target_link_libraries(test_relocalizer svo_relocalization)
 
-add_executable(test_confusion_matrix src/test_confusion_matrix.cpp)
+add_executable(test_confusion_matrix src/test/test_confusion_matrix.cpp)
 target_link_libraries(test_confusion_matrix svo_relocalization)
 
 ## Specify libraries to link a library or executable target against
