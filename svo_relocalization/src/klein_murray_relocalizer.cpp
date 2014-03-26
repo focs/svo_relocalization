@@ -2,17 +2,16 @@
 #include <svo_relocalization/klein_murray_relocalizter.h>
 
 #include <Eigen/Core>
-#include <opencv2/opencv.hpp>
-#include <sophus/se3.h>
-#include <sophus/se2.h>
 
 #include <svo_relocalization/img_aling_se2.h>
+#include <svo_relocalization/se2_align_se3.h>
 
 namespace reloc
 {
  
 
-KMRelocalizer::KMRelocalizer ()
+KMRelocalizer::KMRelocalizer (vk::AbstractCamera *camera_model) :
+  camera_model_(camera_model)
 {
 
 }
@@ -31,7 +30,16 @@ void KMRelocalizer::addFrame(const std::vector<cv::Mat>& img_pyr, const Sophus::
   // Enqueue new image
   ImagePoseId tmp_ip = {im_small_blur_0mean, T_frame_wordl, id};
   images_.push_back(tmp_ip);
+}
 
+Sophus::SE3 KMRelocalizer::findSE3(Sophus::SE2 t, vk::AbstractCamera *camera_model)
+{
+  Sophus::SE3 model;
+  SE2toSE3 s23 (t, camera_model);
+  s23.n_iter_ = 3;
+  s23.optimizeGaussNewton(model);
+
+  return model;
 }
 
 bool KMRelocalizer::relocalize(
@@ -40,7 +48,6 @@ bool KMRelocalizer::relocalize(
     Sophus::SE3& T_frame_wordl_out,
     int& id_out)
 {
-
   // Compare current image to all stored images
   // Taking first element of the pyramid for now
   cv::Mat query_img = convertToSmallBluryImage(img_pyr.at(0));
@@ -56,27 +63,12 @@ bool KMRelocalizer::relocalize(
   //std::cout << "Template transformation: " << T_template_query << std::endl;
   motion_estimator.optimize(T_template_query);
 
-  // convert se2 to se3 with xy translation and rotation over z axes
-  Eigen::Vector3d se2_values = Sophus::SE2::vee(T_template_query.matrix());
-  Eigen::Matrix< double, 6, 1 > se3_values;
-  // Set X translation
-  se3_values[0] = se2_values[0];
-  // Set Y translation
-  se3_values[1] = se2_values[1];
-  // Z translation and X, Y rotations are set to 0
-  se3_values[2] = 0;
-  se3_values[3] = 0;
-  se3_values[4] = 0;
-  // Set Z rotation
-  se3_values[5] = se2_values[2];
-
   // Apply found rotation to the known frame rotation
-  T_frame_wordl_out = Sophus::SE3::exp(se3_values).inverse() * best_match.T_f_w;
+  T_frame_wordl_out = findSE3(T_template_query, camera_model_).inverse() * best_match.T_f_w;
   id_out = best_match.id;
 
   // For now
   return true;
-
 }
 
 KMRelocalizer::ImagePoseId& KMRelocalizer::findBestMatch(const cv::Mat& queryImage)
