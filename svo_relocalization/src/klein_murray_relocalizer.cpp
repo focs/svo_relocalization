@@ -25,7 +25,7 @@ void KMRelocalizer::addFrame(const std::vector<cv::Mat>& img_pyr, const Sophus::
 {
   // Not sure which level of the pyramid should be used, taking first
   cv::Mat im_small_blur_0mean;
-  im_small_blur_0mean = convertToSmallBluryImage(img_pyr.at(0));
+  im_small_blur_0mean = convertToSmallBlurryImage(img_pyr.at(0));
 
   // Enqueue new image
   ImagePoseId tmp_ip = {im_small_blur_0mean, T_frame_wordl, id};
@@ -50,7 +50,7 @@ bool KMRelocalizer::relocalize(
 {
   // Compare current image to all stored images
   // Taking first element of the pyramid for now
-  cv::Mat query_img = convertToSmallBluryImage(img_pyr.at(0));
+  cv::Mat query_img = convertToSmallBlurryImage(img_pyr.at(0));
   ImagePoseId best_match = findBestMatch(query_img);
   
   // Find best transformation between current frame and best match
@@ -97,7 +97,7 @@ KMRelocalizer::ImagePoseId& KMRelocalizer::findBestMatch(const cv::Mat& queryIma
   return *best_pair;
 }
 
-cv::Mat KMRelocalizer::convertToSmallBluryImage(const cv::Mat& img)
+cv::Mat KMRelocalizer::convertToSmallBlurryImage(const cv::Mat& img)
 {
   cv::Mat im_float;
   img.convertTo(im_float, CV_32F);

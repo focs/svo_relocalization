@@ -1,7 +1,4 @@
 
-#ifndef IMG_ALIGN_SE2_CPP
-#define IMG_ALIGN_SE2_CPP
-
 #include <iostream>
 
 #include <Eigen/Core>
@@ -159,5 +156,4 @@ void SecondOrderMinimizationSE2::finishIteration()
 
 } /* reloc */ 
 
-#endif /* end of include guard: IMG_ALIGN_SE2_CPP */
 

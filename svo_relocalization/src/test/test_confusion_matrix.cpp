@@ -12,11 +12,13 @@
 #include <sophus/se3.h>
 #include <vikit/atan_camera.h>
 
-#include <svo_relocalization/klein_murray_relocalizter.h>
+#include <svo_relocalization/cc_place_finder.h>
 
 
 using namespace std;
 using namespace Eigen;
+using namespace cv;
+using namespace reloc;
 
 bool has_suffix(const std::string &str, const std::string &suffix)
 {
@@ -42,7 +44,7 @@ vector<string> getFilesInFolder(const string& folder, const string& suffix)
 
     file = de->d_name;
     if (has_suffix(file, suffix))
-      file_list.push_back(file);
+      file_list.push_back(folder+"/"+file);
   }
   closedir(dir);
 
@@ -51,84 +53,47 @@ vector<string> getFilesInFolder(const string& folder, const string& suffix)
   return file_list;
 }
 
-class TestConMatKMRelocalizer
+void loadImages(vector<string> &file_list, vector<Mat> &images_out)
 {
-public:
-  TestConMatKMRelocalizer (vk::ATANCamera *camera_model, string images_path, string suffix = ".png");
-  virtual ~TestConMatKMRelocalizer (){};
-
-  void startTest();
-private:
-
-  void loadImages();
-  string images_path_;
-  string suffix_;
-
-  reloc::KMRelocalizer r;
-};
-
-TestConMatKMRelocalizer::TestConMatKMRelocalizer(vk::ATANCamera *camera_model, string images_path, string suffix) :
-  r(camera_model)
-{
- images_path_= images_path;
-  suffix_= suffix;
-}
-
-void TestConMatKMRelocalizer::loadImages()
-{
-  vector<string> file_list;
-  // Get a list of files ending with .png in the given folder
-  file_list = getFilesInFolder(images_path_, suffix_);
-
   for (size_t i = 0; i < file_list.size(); ++i)
   {
-    cv::Mat im = cv::imread(images_path_+file_list[i], CV_LOAD_IMAGE_GRAYSCALE);
-    vector<cv::Mat> tmp_vec;
-    tmp_vec.push_back(im);
-    r.addFrame(tmp_vec, Sophus::SE3(), i);
+    cv::Mat im = cv::imread(file_list.at(i), CV_LOAD_IMAGE_GRAYSCALE);
+    images_out.push_back(im);
   }
 }
 
-void TestConMatKMRelocalizer::startTest()
+void startTest(vector<Mat> images, string path)
 {
-  loadImages();
-
   
   std::ofstream file;
-  file.open((images_path_+"confusion_matrix.txt").c_str());
+  file.open((path+"/confusion_matrix.txt").c_str());
 
-
-  std::list<reloc::KMRelocalizer::ImagePoseId>::iterator image_it, image_it_nested;
-
-  for (image_it = r.images_.begin(); image_it != r.images_.end(); image_it++)
+  CCPlaceFinder r;
+  for (size_t i = 0; i < images.size(); ++i)
   {
-    for (image_it_nested = r.images_.begin(); image_it_nested != r.images_.end(); image_it_nested++)
+    vector<Mat> tmp;
+    tmp.push_back(images.at(i));
+
+    r.addFrame(tmp, Sophus::SE3(), i);
+  }
+
+  for (size_t i = 0; i < images.size(); ++i)
+  {
+    for (size_t j = 0; j < images.size(); ++j)
     {
-      cv::Mat diff_im = image_it->image - image_it_nested->image;
+      cv::Mat diff_im = r.getSmallBlurryImage(i)- r.getSmallBlurryImage(j);
       file << cv::sum(diff_im.mul(diff_im))[0] << ' ';
     }
-
     file << endl;
   }
 
-  file.close();
 }
 
 int main(int argc, char const *argv[])
 {
- // Camera intrinsic parameters 
-  float cam_width = 752;
-  float cam_height = 480;
-  Vector2d cam_size (cam_width, cam_height);
-  float cam_fx = 0.582533;
-  float cam_fy = 0.910057;
-  float cam_cx = 0.510927;
-  float cam_cy = 0.526193;
-  float cam_d0 = 0.916379;
-
-  vk::ATANCamera my_camera (cam_width, cam_height, cam_fx, cam_fy, cam_cx, cam_cy, cam_d0);
 
   string folder;
+  
   string suffix = ".png";
 
   if (argc < 2)
@@ -144,9 +109,14 @@ int main(int argc, char const *argv[])
 
   folder = string(argv[1]);
   
+  vector<string> file_list;
+  file_list = getFilesInFolder(folder, suffix);
   
-  TestConMatKMRelocalizer tester (&my_camera, folder);
-  tester.startTest();
+  vector<Mat> images;
+  loadImages(file_list, images);
+
+  startTest(images, folder);
+
 
   return 0;
 }

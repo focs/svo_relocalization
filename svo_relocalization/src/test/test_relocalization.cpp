@@ -6,7 +6,7 @@
 #include <Eigen/Core>
 #include <sophus/se3.h>
 #include <vikit/atan_camera.h>
-#include <svo_relocalization/klein_murray_relocalizter.h>
+#include <svo_relocalization/multiple_relocalizer.h>
 
 using namespace std;
 using namespace Eigen;
@@ -67,7 +67,7 @@ int main(int argc, char const *argv[])
   cout << "Image size: " << images[0].size() << endl;
 
 
-  KMRelocalizer relocalizer(&my_camera);
+  MultipleRelocalizer relocalizer(&my_camera);
   int query_idx = 253;
 
   for (size_t i = 0; i < images.size(); i+=1)

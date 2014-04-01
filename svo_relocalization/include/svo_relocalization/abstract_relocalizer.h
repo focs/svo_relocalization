@@ -16,7 +16,7 @@ public:
   virtual ~AbstractRelocalizer (){};
 
   /// Add new frame to the relocalizer (usually all keyframes are used here)
-  virtual void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_wordl, int id) = 0;
+  virtual void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_world, int id) = 0;
   
   /// Start relocalization.
   virtual bool relocalize(

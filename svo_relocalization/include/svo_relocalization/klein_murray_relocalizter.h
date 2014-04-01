@@ -10,7 +10,7 @@
 
 #include <svo_relocalization/abstract_relocalizer.h>
 
-class TestConMatKMRelocalizer;
+class TestConMatPlaceFinder;
 namespace reloc
 {
 
@@ -33,7 +33,7 @@ public:
   static Sophus::SE3 findSE3 (Sophus::SE2 t, vk::AbstractCamera *model);
 
   // Friend test class (allow access private atributes, methods and datastructures)
-  friend class ::TestConMatKMRelocalizer;
+  friend class ::TestConMatPlaceFinder;
 
 private:
 
@@ -45,10 +45,10 @@ private:
     int id;
   };
 
-  /// Find best match with small blured images
+  /// Find best match with small blurred images
   ImagePoseId& findBestMatch(const cv::Mat& queryImage);
-  /// Convert to "small blury image"
-  cv::Mat convertToSmallBluryImage(const cv::Mat& img);
+  /// Convert to "small blurry image"
+  cv::Mat convertToSmallBlurryImage(const cv::Mat& img);
 
   std::list<ImagePoseId> images_; //<! List of images included so far with its pose and id
   vk::AbstractCamera *camera_model_;

@@ -7,7 +7,7 @@
 #include <vikit/atan_camera.h>
 
 #include <svo_relocalization/img_aling_se2.h>
-#include <svo_relocalization/klein_murray_relocalizter.h>
+#include <svo_relocalization/esm_relpos_finder.h>
 
 using namespace std;
 using namespace cv;
@@ -76,7 +76,7 @@ int main(int argc, char const *argv[])
 
   // convert found se2 image aligment ot a world rotation SO3
   SE3 se3_T_template_query;
-  se3_T_template_query = reloc::KMRelocalizer::findSE3(se2_T_template_query, &my_camera);
+  se3_T_template_query = reloc::ESMRelposFinder::findSE3(se2_T_template_query, &my_camera);
 
   cout << "Found se3:" << endl << se3_T_template_query << endl;
   cout << "Query:" << endl << poses.at(query_idx) << endl;
@@ -90,13 +90,18 @@ int main(int argc, char const *argv[])
   Vector3d p (0.05,0.5,1);
   //p = my_camera.cam2world(Vector2d(5,0) + center);
 
-  cout << "With nosing" << endl << my_camera.world2cam( p ) << endl; 
-  cout << "With se2" << endl << se2_T_template_query*(my_camera.world2cam(p) - center) << endl;
-  cout << "With se3" << endl << my_camera.world2cam(se3_T_template_query * p ) - center << endl; 
-  cout << "difference wis nosin" << endl << my_camera.world2cam( p ) - center - se2_T_template_query*(my_camera.world2cam(p) - center) << endl;
-  cout << "difference" << endl << my_camera.world2cam(se3_T_template_query * p ) - center - 
-  se2_T_template_query*(my_camera.world2cam(p) - center)
-     << endl;
+  //cout << "With nosing" << endl << my_camera.world2cam( p ) << endl; 
+  //cout << "With se2" << endl << se2_T_template_query*(my_camera.world2cam(p) - center) << endl;
+  //cout << "With se3" << endl << my_camera.world2cam(se3_T_template_query * p ) - center << endl; 
+  //cout << "difference wis nosin" << endl << my_camera.world2cam( p ) - center - se2_T_template_query*(my_camera.world2cam(p) - center) << endl;
+  //cout << "difference" << endl << my_camera.world2cam(se3_T_template_query * p ) - center - 
+  //se2_T_template_query*(my_camera.world2cam(p) - center) << endl;
+  
+
+  cout << "templat" << endl << poses.at(template_idx).matrix() << endl;
+  cout << "query" << endl << poses.at(query_idx).matrix() << endl;
+  cout << "Template throuth query" << endl << found_se3_T_template_world.matrix() << endl;
+  cout << "found transformation" << endl << se3_T_template_query.matrix() << endl;
  
 
 

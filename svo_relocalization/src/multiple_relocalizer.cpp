@@ -3,8 +3,8 @@
 
 #include <cstdio>
 
-#include <svo_relocalization/CC_place_finder.h>
-#include <svo_relocalization/ESM_relpos_finder.h>
+#include <svo_relocalization/cc_place_finder.h>
+#include <svo_relocalization/esm_relpos_finder.h>
 
 namespace reloc
 {

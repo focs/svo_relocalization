@@ -57,9 +57,12 @@ LIST(APPEND MY_LINK_LIBS
 
 # Declare a cpp library
 add_library(svo_relocalization
-  src/img_align_se2.cpp
-  src/klein_murray_relocalizer.cpp
+  ./src/img_align_se2.cpp
+  #./src/klein_murray_relocalizer.cpp
   ./src/se2_align_se3.cpp
+  ./src/esm_relpos_finder.cpp
+  ./src/CC_place_finder.cpp
+  ./src/multiple_relocalizer.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}
