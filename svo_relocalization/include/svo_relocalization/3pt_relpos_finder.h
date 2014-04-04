@@ -9,16 +9,25 @@
 namespace reloc
 {
 
-class TrheePtRelposFinder : public AbstractRelposFinder
+class ThreePtRelposFinder : public AbstractRelposFinder
 {
 public:
-  TrheePtRelposFinder ();
-  virtual ~TrheePtRelposFinder ();
+
+  struct Options {
+    size_t n_iterations;
+    double reprojection_error;
+    Options()
+    : n_iterations(300),
+      reprojection_error(2.0)
+    {} 
+  } options_;
+
+  ThreePtRelposFinder ();
+  virtual ~ThreePtRelposFinder ();
 
   virtual Sophus::SE3 findRelpos (
       cv::Mat query_img,
-      cv::Mat template_img
-      );
+      cv::Mat template_img);
 
 private:
 

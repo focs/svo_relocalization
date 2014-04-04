@@ -25,11 +25,13 @@ public:
   cv::Mat getSmallBlurryImage(int idx);
 
 private:
+
   /// Structure used to save data in a std::list
   struct ImagePoseId
   {
     cv::Mat image;
     Sophus::SE3 T_f_w;
+    FrameDataPtr data;
     int id;
   };
 

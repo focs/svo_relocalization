@@ -15,9 +15,14 @@ public:
   AbstractRelposFinder () {};
   virtual ~AbstractRelposFinder () {};
 
-  virtual Sophus::SE3 findRelpos (
-      cv::Mat template_img,
-      cv::Mat queryi_img) = 0;
+  virtual void removeFrame(int frame_id) {};
+
+  virtual void addFrame(FrameDataPtr frame_data) = 0;
+
+  virtual Sophus::SE3 findRelpos(
+      const FrameDataPtr& frame_query,
+      const FrameDataPtr& frame_best_match,
+      const Sophus::SE3& T_frame_world_estimate) = 0;
 
 private:
 

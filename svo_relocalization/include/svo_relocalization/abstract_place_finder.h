@@ -8,6 +8,7 @@
 namespace reloc
 {
 
+
 class AbstractPlaceFinder
 {
 public:
@@ -16,10 +17,16 @@ public:
 
 private:
   
+  virtual void removeFrame(int frame_id) = 0;
+  
   // Need to add points
-  virtual void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_world, int id) = 0;
+  virtual void addFrame(FrameDataPtr frame_data) = 0;
+  
   /// Should return the id of the most similar frame
-  int findPlace();
+  virtual FrameDataPtr findPlace(
+      const std::vector<cv::Mat>& query_img_pyr,
+      const Sophus::SE3& T_frame_world_estimate);
+
 };
 
 } /* reloc */ 

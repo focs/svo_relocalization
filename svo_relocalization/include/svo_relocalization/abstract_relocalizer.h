@@ -25,6 +25,7 @@ public:
       Sophus::SE3& T_frame_wordl_out,
       int& id_out) = 0;
 
+  std::list<FrameDataPtr> frames_;
 };
 
 

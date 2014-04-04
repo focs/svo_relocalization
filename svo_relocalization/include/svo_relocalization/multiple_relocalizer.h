@@ -15,6 +15,22 @@ namespace vk
 namespace reloc
 {
 
+struct Feature {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  Vector2d px; 
+  double depth;
+  size_t point_id;
+};
+
+struct FrameData {
+  std::vector<Feature> features;
+  std::vector<cv::Mat> img_pyr;
+  Sophus::SE3 T_frame_world;
+  size_t id;
+};
+typedef std::shared_ptr<FrameData> FrameDataPtr;
+
 /// Implementation of a relocalizer using the technique from Klein and Murray
 class MultipleRelocalizer : AbstractRelocalizer
 {
@@ -22,14 +38,24 @@ class MultipleRelocalizer : AbstractRelocalizer
   enum RelposFinder { ESM };
 
 public:
-  MultipleRelocalizer (
+  MultipleRelocalizer(
       vk::AbstractCamera *camera_model,
-      PlaceFinder place_finder_method = CrossCorrelation,
-      RelposFinder relpos_finder_method = ESM);
+      AbstractPlaceFinderPtr place_finder_method = CrossCorrelation,
+      AbstractRelposFinderPtr relpos_finder_method = ESM);
 
   virtual ~MultipleRelocalizer ();
 
-  void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_wordl, int id);
+  void removeFrame(int frame_id)
+  {
+    palace_finder_->removeFrame(frame_id);
+    relpos_finder_->removeFrame(frame_id);
+  }
+  
+  void addFrame(FrameDataPtr frame)
+  {
+    palace_finder_->addFrame(frame);
+    relpos_finder_->addFrame(frame);
+  }
 
   bool relocalize(
       const std::vector<cv::Mat>& query_img_pyr,
@@ -40,7 +66,7 @@ public:
 private:
   AbstractPlaceFinder *place_finder_;
   AbstractRelposFinder *relpos_finder_;
-
+  
 };
 
 }
