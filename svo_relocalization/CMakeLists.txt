@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   vikit_common
   vikit_ros
+  opengv
 )
 
 ## System dependencies are found with CMake's conventions
@@ -60,9 +61,11 @@ add_library(svo_relocalization
   ./src/img_align_se2.cpp
   #./src/klein_murray_relocalizer.cpp
   ./src/se2_align_se3.cpp
-  ./src/esm_relpos_finder.cpp
-  ./src/CC_place_finder.cpp
+  ./src/esp_relpos_finder.cpp
+  ./src/cc_place_finder.cpp
   ./src/multiple_relocalizer.cpp
+  ./src/5pt_relpos_finder.cpp
+  ./src/3pt_relpos_finder.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}
