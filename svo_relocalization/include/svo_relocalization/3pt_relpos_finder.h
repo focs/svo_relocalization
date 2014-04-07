@@ -16,8 +16,8 @@ public:
   struct Options {
     size_t n_iterations;
     double reprojection_error;
-    Options()
-    : n_iterations(300),
+    Options() :
+      n_iterations(300),
       reprojection_error(2.0)
     {} 
   } options_;
@@ -25,9 +25,10 @@ public:
   ThreePtRelposFinder ();
   virtual ~ThreePtRelposFinder ();
 
-  virtual Sophus::SE3 findRelpos (
-      cv::Mat query_img,
-      cv::Mat template_img);
+  Sophus::SE3 findRelpos(
+      const FrameSharedPtr& frame_query,
+      const FrameSharedPtr& frame_best_match,
+      const Sophus::SE3& T_frame_query_estimate) = 0;
 
 private:
 

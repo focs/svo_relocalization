@@ -1,57 +1,44 @@
 
 #include <svo_relocalization/multiple_relocalizer.h>
-
 #include <cstdio>
 
-#include <svo_relocalization/cc_place_finder.h>
-#include <svo_relocalization/esm_relpos_finder.h>
 
 namespace reloc
 {
   
 MultipleRelocalizer::MultipleRelocalizer (
-    vk::AbstractCamera *camera_model,
-    PlaceFinder place_finder_method,
-    RelposFinder relpos_finder_method)
+    AbstractPlaceFinderSharedPtr place_finder,
+    AbstractRelposFinderSharedPtr relpos_finder) :
+  place_finder_(place_finder),
+  relpos_finder_(relpos_finder)
 {
-  switch (place_finder_method)
-  {
-    case CrossCorrelation:
-      CCPlaceFinder *ccpf = new CCPlaceFinder();
-      place_finder_ = ccpf;
-      break;
-  }
-
-  switch (relpos_finder_method)
-  {
-    case ESM:
-      ESMRelposFinder *esmrf = new ESMRelposFinder(camera_model);
-      relpos_finder_ = esmrf;
-      break;
-  }
 
 }
 
 MultipleRelocalizer::~MultipleRelocalizer ()
 {
-  delete place_finder_;
-  delete relpos_finder_;
 }
 
-void MultipleRelocalizer::addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_wordl, int id)
+void MultipleRelocalizer::removeFrame (int frame_id)
 {
+  palace_finder_->removeFrame(frame_id);
+  relpos_finder_->removeFrame(frame_id);
+}
 
-  //place_finder_->addFrame(img_pyr, T_frame_wordl, id);
-
+void MultipleRelocalizer::addFrame(FrameSharedPtr frame)
+{
+  palace_finder_->addFrame(frame);
+  relpos_finder_->addFrame(frame);
 }
 
 bool MultipleRelocalizer::relocalize(
-    const std::vector<cv::Mat>& query_img_pyr,
-    const Sophus::SE3& T_frame_world_estimate,
-    Sophus::SE3& T_frame_wordl_out,
-   int& id_out)
+    const FrameSharedPtr &frame_query,
+    int &id_out)
 {
+  FrameSharedPtr found_frame;
+  found_frame = place_finder_->findPlace(frame_query);
 
+  relpos_finder_->findRelpos(frame_query, found_frame);
 }
 
 } /* reloc */ 

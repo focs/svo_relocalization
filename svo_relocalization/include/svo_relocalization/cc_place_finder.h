@@ -7,8 +7,6 @@
 
 #include <vector>
 
-#include <vikit/abstract_camera.h>
-
 namespace reloc
 {
 
@@ -18,29 +16,25 @@ public:
   CCPlaceFinder ();
   virtual ~CCPlaceFinder ();
 
-  // Need to add points
-  // T_frame_world not used
-  virtual void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_world, int id);
+  virtual void addFrame(const FrameSharedPtr &frame);
 
   cv::Mat getSmallBlurryImage(int idx);
 
 private:
 
   /// Structure used to save data in a std::list
-  struct ImagePoseId
+  struct ExtendedFrame
   {
-    cv::Mat image;
-    Sophus::SE3 T_f_w;
-    FrameDataPtr data;
-    int id;
+    cv::Mat smallBlurryImage;
+    FrameSharedPtr data;
   };
 
   /// Find best match with small blurred images
-  ImagePoseId& findBestMatch(const cv::Mat& queryImage);
+  ExtendedFrame& findBestMatch(const cv::Mat& queryImage);
   /// Convert to "small blurry image"
   cv::Mat convertToSmallBlurryImage(const cv::Mat& img);
 
-  std::vector<ImagePoseId> images_; //<! List of images included so far with its pose and id
+  std::vector<ExtendedFrame> images_; //<! List of images included so far with its pose and id
 
 };
 

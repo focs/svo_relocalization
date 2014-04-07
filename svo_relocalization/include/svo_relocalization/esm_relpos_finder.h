@@ -12,19 +12,36 @@ namespace reloc
 
 class ESMRelposFinder : public AbstractRelposFinder
 {
+  struct Options {
+    uint32_t pyr_lvl_;
+    uint32_t n_iter_se2_to_se3_;
+
+    Options() :
+      pyr_lvl_(0),
+      n_iter_se2_to_se3_(3)
+    {} 
+  } options_;
+
 public:
   ESMRelposFinder(vk::AbstractCamera *camera_model);
   virtual ~ESMRelposFinder();
 
-  virtual Sophus::SE3 findRelpos (
-      cv::Mat query_img,
-      cv::Mat template_img
-      );
+  void removeFrame(int frame_id);
+  void addFrame(const FrameSharedPtr &frame);
 
-  static Sophus::SE3 findSE3(Sophus::SE2 t, vk::AbstractCamera *camera_model);
+  Sophus::SE3 findRelpos(
+      const FrameSharedPtr& frame_query,
+      const FrameSharedPtr& frame_best_match,
+      const Sophus::SE3& T_frame_query_estimate);
+
+  static Sophus::SE3 findSE3(
+      Sophus::SE2 t,
+      vk::AbstractCamera *camera_model,
+      uint32_t n_iter);
 
 private:
   vk::AbstractCamera *camera_model_;
+
 };
 
 } /* reloc */ 
