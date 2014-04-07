@@ -2,8 +2,11 @@
 #ifndef SVO_RELOCALIZER_ABSTRACT_PLACE_FINDER_H_Q5PUSNLO
 #define SVO_RELOCALIZER_ABSTRACT_PLACE_FINDER_H_Q5PUSNLO
 
+#include <memory>
 #include <opencv2/opencv.hpp>
 #include <sophus/se3.h>
+
+#include <svo_relocalization/frame.h>
 
 namespace reloc
 {
@@ -15,19 +18,17 @@ public:
   AbstractPlaceFinder () {};
   virtual ~AbstractPlaceFinder () {};
 
-private:
-  
   virtual void removeFrame(int frame_id) = 0;
   
   // Need to add points
-  virtual void addFrame(FrameDataPtr frame_data) = 0;
+  virtual void addFrame(const FrameSharedPtr &frame_data) = 0;
   
   /// Should return the id of the most similar frame
-  virtual FrameDataPtr findPlace(
-      const std::vector<cv::Mat>& query_img_pyr,
-      const Sophus::SE3& T_frame_world_estimate);
+  virtual FrameSharedPtr findPlace(const FrameSharedPtr &frame_query) = 0;
 
 };
+
+typedef std::shared_ptr<AbstractPlaceFinder> AbstractPlaceFinderSharedPtr;
 
 } /* reloc */ 
 
