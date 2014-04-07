@@ -15,10 +15,10 @@ public:
   FivePtRelposFinder ();
   virtual ~FivePtRelposFinder ();
 
-  virtual Sophus::SE3 findRelpos (
-      cv::Mat query_img,
-      cv::Mat template_img
-      );
+  Sophus::SE3 findRelpos(
+      const FrameSharedPtr& frame_query,
+      const FrameSharedPtr& frame_best_match,
+      const Sophus::SE3& T_frame_query_estimate);
 
 private:
 

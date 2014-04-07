@@ -12,17 +12,17 @@
 namespace reloc
 {
   
-TrheePtRelposFinder::TrheePtRelposFinder ()
+ThreePtRelposFinder::ThreePtRelposFinder ()
 {
 
 }
 
-TrheePtRelposFinder::~TrheePtRelposFinder ()
+ThreePtRelposFinder::~ThreePtRelposFinder ()
 {
 
 }
 
-Sophus::SE3 findRelpos(
+Sophus::SE3 ThreePtRelposFinder::findRelpos(
     const FrameSharedPtr& frame_query,
     const FrameSharedPtr& frame_best_match,
     const Sophus::SE3& T_frame_query_estimate)

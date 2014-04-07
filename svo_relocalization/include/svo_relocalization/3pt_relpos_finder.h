@@ -16,6 +16,7 @@ public:
   struct Options {
     size_t n_iterations;
     double reprojection_error;
+
     Options() :
       n_iterations(300),
       reprojection_error(2.0)
@@ -28,7 +29,7 @@ public:
   Sophus::SE3 findRelpos(
       const FrameSharedPtr& frame_query,
       const FrameSharedPtr& frame_best_match,
-      const Sophus::SE3& T_frame_query_estimate) = 0;
+      const Sophus::SE3& T_frame_query_estimate);
 
 private:
 
