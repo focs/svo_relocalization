@@ -17,7 +17,7 @@ class ESMRelposFinder : public AbstractRelposFinder
     uint32_t n_iter_se2_to_se3_;
 
     Options() :
-      pyr_lvl_(0),
+      pyr_lvl_(3),
       n_iter_se2_to_se3_(3)
     {} 
   } options_;

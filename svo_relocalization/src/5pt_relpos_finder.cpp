@@ -25,9 +25,14 @@ Sophus::SE3 FivePtRelposFinder::findRelpos(
     const FrameSharedPtr& frame_query,
     const FrameSharedPtr& frame_best_match)
 {
+  int pyr_lvl = 0;
+
+  std::vector<cv::KeyPoint> keypoints;
+  cv::FAST(frame_query->img_pyr_.at(pyr_lvl), keypoints, 50, true);
 
   std::vector<Eigen::Vector3d> im1_point_list;
   std::vector<Eigen::Vector3d> im2_point_list;
+
 
   opengv::bearingVectors_t im1_bearings;
   opengv::bearingVectors_t im2_bearings;

@@ -38,16 +38,19 @@ void CCPlaceFinder::addFrame(const FrameSharedPtr &frame)
   // Enqueue new image
   ExtendedFrame tmp_ip = {im_small_blur_0mean, frame};
   images_.push_back(tmp_ip);
+
+  std::cout << "Frame added in CCPlaceFinder" << std::endl;
 }
 
 FrameSharedPtr CCPlaceFinder::findPlace(FrameSharedPtr frame_query)
 {
-
   cv::Mat im_query_small_blur_0mean;
   im_query_small_blur_0mean = convertToSmallBlurryImage(frame_query->img_pyr_);
 
   ExtendedFrame best_match;
-  best_match = findBestMatch(im_query_small_blur_0mean);
+  findBestMatch(im_query_small_blur_0mean, best_match);
+
+  std::cout << "best match id " << best_match.data->id_ << std::endl;
 
   return best_match.data;
 
@@ -68,8 +71,15 @@ cv::Mat CCPlaceFinder::getSmallBlurryImage(uint32_t idx)
 
 }
 
-CCPlaceFinder::ExtendedFrame& CCPlaceFinder::findBestMatch(const cv::Mat& queryImage)
+void CCPlaceFinder::findBestMatch(const cv::Mat& queryImage, ExtendedFrame &result)
 {
+
+  // if there is not image don't do anything
+  //if (images_.size() <= 0)
+  //{
+  //  return;
+  //}
+
   std::vector<ExtendedFrame>::iterator image_it;
   std::vector<ExtendedFrame>::iterator best_pair = images_.begin();
 
@@ -89,9 +99,7 @@ CCPlaceFinder::ExtendedFrame& CCPlaceFinder::findBestMatch(const cv::Mat& queryI
     }
   }
 
-  //std::cout << "best match id: " << best_pair->id << std::endl;
-
-  return *best_pair;
+  result = *best_pair;
 }
 
 cv::Mat CCPlaceFinder::convertToSmallBlurryImage(const std::vector<cv::Mat>& img_pyr)
@@ -100,13 +108,15 @@ cv::Mat CCPlaceFinder::convertToSmallBlurryImage(const std::vector<cv::Mat>& img
   cv::Size s (40, 30);
   uint32_t idx;
   idx = findInPyr(img_pyr, s);
+  //std::cout << "Image has " << img_pyr.size() << " levels. Choosen was: " << idx << " with size " << img_pyr.at(idx).size() << std::endl;
 
   cv::Mat im_float;
   img_pyr.at(idx).convertTo(im_float, CV_32F);
 
   cv::Mat im_small;
-  if (im_float.size().height > s.height || im_float.size().width > s.width)
+  if (std::abs(im_float.size().height - s.height) > 10 || std::abs(im_float.size().width - s.width) > 10)
   {
+    std::cout << "Resizeing imag" << std::endl;
     cv::resize(im_float, im_small, s);
   }
   else

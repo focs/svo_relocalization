@@ -32,7 +32,8 @@ private:
   };
 
   /// Find best match with small blurred images
-  ExtendedFrame& findBestMatch(const cv::Mat& queryImage);
+  void findBestMatch(const cv::Mat& queryImage, ExtendedFrame &result);
+
   /// Convert to "small blurry image"
   cv::Mat convertToSmallBlurryImage(const std::vector<cv::Mat> &img_pyr);
 

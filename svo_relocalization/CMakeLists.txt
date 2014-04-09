@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8.3)
 project(svo_relocalization)
 
 set(CMAKE_BUILD_TYPE Debug)
+
+# add suport for std::shared_ptr
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -10,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   vikit_common
   vikit_ros
   opengv
+  # To be removed
+  svo
+  svo_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -61,7 +68,7 @@ add_library(svo_relocalization
   ./src/img_align_se2.cpp
   #./src/klein_murray_relocalizer.cpp
   ./src/se2_align_se3.cpp
-  ./src/esp_relpos_finder.cpp
+  ./src/esm_relpos_finder.cpp
   ./src/cc_place_finder.cpp
   ./src/multiple_relocalizer.cpp
   ./src/5pt_relpos_finder.cpp
@@ -84,6 +91,9 @@ target_link_libraries(test_relocalizer svo_relocalization)
 add_executable(test_confusion_matrix src/test/test_confusion_matrix.cpp)
 target_link_libraries(test_confusion_matrix svo_relocalization)
 
+#To be removed
+add_executable(svo_node ./src/svo_relocalizer_node.cpp)
+target_link_libraries(svo_node svo_relocalization svo)
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nano_slam_relocalization_node
 #   ${catkin_LIBRARIES}

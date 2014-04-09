@@ -36,17 +36,17 @@ Sophus::SE3 ESMRelposFinder::findRelpos(
       frame_best_match->img_pyr_.at(options_.pyr_lvl_));
   
   // Model set to 0
-  Sophus::SE2 se2_T_template_query;
-  motion_estimator.optimize(se2_T_template_query);
+  Sophus::SE2 se2_T_query_template;
+  motion_estimator.optimize(se2_T_query_template);
 
   // Apply found rotation to the known frame rotation
-  Sophus::SE3 se3_T_template_query;
-  se3_T_template_query = findSE3(
-      se2_T_template_query,
+  Sophus::SE3 se3_T_query_template;
+  se3_T_query_template = findSE3(
+      se2_T_query_template,
       camera_model_,
-      options_.n_iter_se2_to_se3_).inverse();
+      options_.n_iter_se2_to_se3_);
 
-  return se3_T_template_query;
+  return se3_T_query_template * frame_best_match->T_frame_world_;
 }
 
 Sophus::SE3 ESMRelposFinder::findSE3(

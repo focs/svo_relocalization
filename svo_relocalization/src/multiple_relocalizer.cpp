@@ -36,7 +36,9 @@ bool MultipleRelocalizer::relocalize(
 {
   FrameSharedPtr found_frame;
   found_frame = place_finder_->findPlace(frame_query);
+
   id_out = found_frame->id_;
+  std::cout << "transformation of the found frame: " << std::endl << found_frame->T_frame_world_;
 
   // This will push the found SE3 into frame_query
   frame_query->T_frame_world_ = relpos_finder_->findRelpos(frame_query, found_frame);

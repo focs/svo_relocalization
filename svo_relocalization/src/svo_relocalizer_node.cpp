@@ -135,15 +135,12 @@ imgCb(const sensor_msgs::ImageConstPtr& msg)
     FramePtr frame = vo_->lastFrame();
     reloc::FrameSharedPtr data(new reloc::Frame());
     data->img_pyr_ = frame->img_pyr_;
-    Vector3d frame_pos = frame->pos();
+    data->id_ = frame->id_;
+    data->T_frame_world_ = frame->T_f_w_;
+
 
     if(vo_->lastFrame()->isKeyframe())
     {
-
-      FramePtr frame = vo_->lastFrame();
-      reloc::FrameSharedPtr data(new reloc::Frame());
-      data->img_pyr_ = frame->img_pyr_;
-      Vector3d frame_pos = frame->pos();
       //for(auto it = frame->fts_->begin(); it!= ...)
       //  double depth = (frame_pos - frame->(*it)->point->pos_).norm();
     
@@ -153,17 +150,17 @@ imgCb(const sensor_msgs::ImageConstPtr& msg)
     else
     {
       // run relocalizer
-      //int found_id;
-      //relocalizer_->relocalize(data, found_id);
+      int found_id;
+      relocalizer_->relocalize(data, found_id);
 
-      //std::cout << "Found position" << std::endl << data->T_frame_world_ << std::endl;
-      //std::cout << "Actual position:" << std::endl << frame->pos() << std::endl;
+      std::cout << "Found position " << found_id << std::endl << data->T_frame_world_;
+      std::cout << "Actual position: " << frame->id_ << std::endl << frame->T_f_w_ << std::endl;
     }
 
 
   }
 
-  //if(vo_->stage == RELOCALIZING) 
+  if(vo_->stage == RELOCALIZING) 
 
 
   if(vo_->stage() == FrameHandlerMono::STAGE_PAUSED)
