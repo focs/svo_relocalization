@@ -76,7 +76,7 @@ int main(int argc, char const *argv[])
 
   // convert found se2 image aligment ot a world rotation SO3
   SE3 se3_T_template_query;
-  se3_T_template_query = reloc::ESMRelposFinder::findSE3(se2_T_template_query, &my_camera);
+  se3_T_template_query = reloc::ESMRelposFinder::findSE3(se2_T_template_query, &my_camera, 3);
 
   cout << "Found se3:" << endl << se3_T_template_query << endl;
   cout << "Query:" << endl << poses.at(query_idx) << endl;

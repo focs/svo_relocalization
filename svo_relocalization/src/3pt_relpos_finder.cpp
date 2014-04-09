@@ -24,8 +24,7 @@ ThreePtRelposFinder::~ThreePtRelposFinder ()
 
 Sophus::SE3 ThreePtRelposFinder::findRelpos(
     const FrameSharedPtr& frame_query,
-    const FrameSharedPtr& frame_best_match,
-    const Sophus::SE3& T_frame_query_estimate)
+    const FrameSharedPtr& frame_best_match)
 {
 
   std::vector<Eigen::Vector3d> im_point_list;

@@ -16,9 +16,11 @@ public:
   CCPlaceFinder ();
   virtual ~CCPlaceFinder ();
 
-  virtual void addFrame(const FrameSharedPtr &frame);
+  void removeFrame(int frame_id);
+  void addFrame(const FrameSharedPtr &frame);
 
-  cv::Mat getSmallBlurryImage(int idx);
+  FrameSharedPtr findPlace(FrameSharedPtr frame_query);
+  cv::Mat getSmallBlurryImage(uint32_t idx);
 
 private:
 
@@ -32,7 +34,7 @@ private:
   /// Find best match with small blurred images
   ExtendedFrame& findBestMatch(const cv::Mat& queryImage);
   /// Convert to "small blurry image"
-  cv::Mat convertToSmallBlurryImage(const cv::Mat& img);
+  cv::Mat convertToSmallBlurryImage(const std::vector<cv::Mat> &img_pyr);
 
   std::vector<ExtendedFrame> images_; //<! List of images included so far with its pose and id
 

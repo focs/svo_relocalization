@@ -14,24 +14,46 @@ CCPlaceFinder::~CCPlaceFinder()
 
 }
 
-void CCPlaceFinder::addFrame(const FrameSharedPtr &frame)
+void CCPlaceFinder::removeFrame(int frame_id)
 {
-  // Search level of the pyramid that is similar to the used one
-  cv::Size s (40, 30);
-  int idx = 0;
-  while (idx < frame->img_pyr_.size() &&
-      frame->img_pyr_.at(idx).size().width > s.width)
+  //TO BE DONE!!!
+}
+
+uint32_t findInPyr(const std::vector<cv::Mat> &img_pyr, cv::Size s)
+{
+  uint32_t idx = 0;
+  while (idx+1 < img_pyr.size() &&
+      img_pyr.at(idx).size().width > s.width)
     ++idx;
 
+  return idx;
+}
+
+void CCPlaceFinder::addFrame(const FrameSharedPtr &frame)
+{
+
   cv::Mat im_small_blur_0mean;
-  im_small_blur_0mean = convertToSmallBlurryImage(frame->img_pyr_.at(0));
+  im_small_blur_0mean = convertToSmallBlurryImage(frame->img_pyr_);
 
   // Enqueue new image
   ExtendedFrame tmp_ip = {im_small_blur_0mean, frame};
   images_.push_back(tmp_ip);
 }
 
-cv::Mat CCPlaceFinder::getSmallBlurryImage(int idx)
+FrameSharedPtr CCPlaceFinder::findPlace(FrameSharedPtr frame_query)
+{
+
+  cv::Mat im_query_small_blur_0mean;
+  im_query_small_blur_0mean = convertToSmallBlurryImage(frame_query->img_pyr_);
+
+  ExtendedFrame best_match;
+  best_match = findBestMatch(im_query_small_blur_0mean);
+
+  return best_match.data;
+
+}
+
+cv::Mat CCPlaceFinder::getSmallBlurryImage(uint32_t idx)
 {
 
   if (idx < images_.size())
@@ -72,14 +94,30 @@ CCPlaceFinder::ExtendedFrame& CCPlaceFinder::findBestMatch(const cv::Mat& queryI
   return *best_pair;
 }
 
-cv::Mat CCPlaceFinder::convertToSmallBlurryImage(const cv::Mat& img)
+cv::Mat CCPlaceFinder::convertToSmallBlurryImage(const std::vector<cv::Mat>& img_pyr)
 {
+  // Search level of the pyramid that is similar to the used one
+  cv::Size s (40, 30);
+  uint32_t idx;
+  idx = findInPyr(img_pyr, s);
+
   cv::Mat im_float;
-  img.convertTo(im_float, CV_32F);
+  img_pyr.at(idx).convertTo(im_float, CV_32F);
+
+  cv::Mat im_small;
+  if (im_float.size().height > s.height || im_float.size().width > s.width)
+  {
+    cv::resize(im_float, im_small, s);
+  }
+  else
+  {
+    im_small = im_float;
+  }
+
 
   // Blur image
   cv::Mat im_small_blur;
-  cv::GaussianBlur(im_float, im_small_blur, cv::Size(3,3), 2.5, 2.5);
+  cv::GaussianBlur(im_small, im_small_blur, cv::Size(3,3), 2.5, 2.5);
 
   // Substract mean to make it 0 mean
   cv::Mat im_small_blur_0mean;

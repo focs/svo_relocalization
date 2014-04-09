@@ -16,6 +16,7 @@
 
 #include <ros/package.h>
 #include <string>
+#include <svo/frame.h>
 #include <svo/frame_handler_mono.h>
 #include <svo/map.h>
 #include <svo/config.h>
@@ -35,6 +36,10 @@
 #include <vikit/camera_loader.h>
 #include <vikit/user_input_thread.h>
 
+#include <svo_relocalization/multiple_relocalizer.h>
+#include <svo_relocalization/cc_place_finder.h>
+#include <svo_relocalization/esm_relpos_finder.h>
+
 namespace svo {
 
 using namespace std;
@@ -53,11 +58,16 @@ public:
   string remote_input_;
   vk::AbstractCamera* cam_;
   bool quit_;
+
+  //Relocalizer
+  reloc::MultipleRelocalizer *relocalizer_;
   VoNode();
   ~VoNode();
   void imgCb(const sensor_msgs::ImageConstPtr& msg);
   void processUserActions();
   void remoteKeyCb(const std_msgs::StringConstPtr& key_input);
+
+
 };
 
 VoNode::
@@ -70,9 +80,15 @@ VoNode() :
   cam_(NULL),
   quit_(false)
 {
+
   // Create Camera
   if(!vk::camera_loader::loadFromRosNs("svo", cam_))
     throw std::runtime_error("Camera model not correctly specified.");
+
+  // Create relocalizer
+  reloc::AbstractPlaceFinderSharedPtr place_finder (new reloc::CCPlaceFinder());
+  reloc::AbstractRelposFinderSharedPtr relpos_finder (new reloc::ESMRelposFinder(cam_));
+  relocalizer_ = new reloc::MultipleRelocalizer (place_finder, relpos_finder);
 
   // Init camera
   vo_ = new svo::FrameHandlerMono(cam_);
@@ -95,6 +111,7 @@ VoNode::
   delete vo_;
   delete user_input_thread_;
   delete cam_;
+  delete relocalizer_;
 }
 
 void VoNode::
@@ -115,22 +132,32 @@ imgCb(const sensor_msgs::ImageConstPtr& msg)
 
   if(vo_->lastFrame() != NULL)
   {
-    if(vo_->lastFrame().isKeyframe())
+    FramePtr frame = vo_->lastFrame();
+    reloc::FrameSharedPtr data(new reloc::Frame());
+    data->img_pyr_ = frame->img_pyr_;
+    Vector3d frame_pos = frame->pos();
+
+    if(vo_->lastFrame()->isKeyframe())
     {
 
       FramePtr frame = vo_->lastFrame();
-      reloc::FrameDataPtr data(new reloc::FrameData);
-      data->frame = frame;
+      reloc::FrameSharedPtr data(new reloc::Frame());
+      data->img_pyr_ = frame->img_pyr_;
       Vector3d frame_pos = frame->pos();
-      for(auto it = frame->fts_->begin(); it!= ...)
-        double depth = (frame_pos - frame->(*it)->point->pos_).norm();
+      //for(auto it = frame->fts_->begin(); it!= ...)
+      //  double depth = (frame_pos - frame->(*it)->point->pos_).norm();
     
+      std::cout << "Adding frame to reloc" << std::endl;
       relocalizer_->addFrame(data);
     }
     else
     {
       // run relocalizer
-      relocalizer_->relocalize(...);
+      //int found_id;
+      //relocalizer_->relocalize(data, found_id);
+
+      //std::cout << "Found position" << std::endl << data->T_frame_world_ << std::endl;
+      //std::cout << "Actual position:" << std::endl << frame->pos() << std::endl;
     }
 
 

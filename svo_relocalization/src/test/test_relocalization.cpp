@@ -7,6 +7,9 @@
 #include <sophus/se3.h>
 #include <vikit/atan_camera.h>
 #include <svo_relocalization/multiple_relocalizer.h>
+#include <svo_relocalization/cc_place_finder.h>
+#include <svo_relocalization/esm_relpos_finder.h>
+#include <svo_relocalization/frame.h>
 
 using namespace std;
 using namespace Eigen;
@@ -67,26 +70,31 @@ int main(int argc, char const *argv[])
   cout << "Image size: " << images[0].size() << endl;
 
 
-  MultipleRelocalizer relocalizer(&my_camera);
-  int query_idx = 253;
+  AbstractPlaceFinderSharedPtr cc_shared (new CCPlaceFinder());
+  AbstractRelposFinderSharedPtr esm_shared (new ESMRelposFinder(&my_camera));
+  MultipleRelocalizer relocalizer(cc_shared, esm_shared);
 
+  int query_idx = 253;
   for (size_t i = 0; i < images.size(); i+=1)
   {
-    if (i != query_idx)
+    if (i != static_cast<size_t>(query_idx))
     {
-      vector<cv::Mat> tmp_vector;
-      tmp_vector.push_back(images.at(i));
-      relocalizer.addFrame(tmp_vector, poses[i], ids[i]);
+      // Create and fill frame
+      FrameSharedPtr frame_shared (new Frame());
+      frame_shared->img_pyr_.push_back(images.at(i));
+      frame_shared->T_frame_world_ = poses.at(i);
+      frame_shared->id_ = ids.at(i);
+      
+      relocalizer.addFrame(frame_shared);
     }
   }
 
   cout << "Query image id: " << ids.at(query_idx) << endl;
-  vector<cv::Mat> tmp_vector;
-  tmp_vector.push_back(images.at(query_idx));
-  Sophus::SE3 T_f_out;
   int id_out;
+  FrameSharedPtr frame_shared (new Frame());
+  frame_shared->img_pyr_.push_back(images.at(query_idx));
 
-  relocalizer.relocalize(tmp_vector, poses.at(query_idx), T_f_out, id_out);
+  relocalizer.relocalize(frame_shared, id_out);
 
 
   return 0;

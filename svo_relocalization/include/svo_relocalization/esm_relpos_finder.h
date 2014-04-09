@@ -30,9 +30,8 @@ public:
   void addFrame(const FrameSharedPtr &frame);
 
   Sophus::SE3 findRelpos(
-      const FrameSharedPtr& frame_query,
-      const FrameSharedPtr& frame_best_match,
-      const Sophus::SE3& T_frame_query_estimate);
+      FrameSharedPtr frame_query,
+      const FrameSharedPtr& frame_best_match);
 
   static Sophus::SE3 findSE3(
       Sophus::SE2 t,

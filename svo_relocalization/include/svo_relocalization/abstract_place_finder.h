@@ -24,7 +24,7 @@ public:
   virtual void addFrame(const FrameSharedPtr &frame_data) = 0;
   
   /// Should return the id of the most similar frame
-  virtual FrameSharedPtr findPlace(const FrameSharedPtr &frame_query) = 0;
+  virtual FrameSharedPtr findPlace(FrameSharedPtr frame_query) = 0;
 
 };
 

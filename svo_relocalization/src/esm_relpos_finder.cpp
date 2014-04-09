@@ -7,8 +7,7 @@ namespace reloc
 {
 
 ESMRelposFinder::ESMRelposFinder(vk::AbstractCamera *camera_model) :
-  camera_model_(camera_model),
-  pyr_lvl_(0)
+  camera_model_(camera_model)
 {
 
 }
@@ -28,9 +27,8 @@ void ESMRelposFinder::addFrame(const FrameSharedPtr &frame)
 
 
 Sophus::SE3 ESMRelposFinder::findRelpos(
-    const FrameSharedPtr& frame_query,
-    const FrameSharedPtr& frame_best_match,
-    const Sophus::SE3& T_frame_query_estimate)
+    FrameSharedPtr frame_query,
+    const FrameSharedPtr& frame_best_match)
 {
 
   SecondOrderMinimizationSE2 motion_estimator(

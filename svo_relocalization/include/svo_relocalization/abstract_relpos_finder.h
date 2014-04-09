@@ -23,9 +23,8 @@ public:
   virtual void addFrame(const FrameSharedPtr &frame) = 0;
 
   virtual Sophus::SE3 findRelpos(
-      const FrameSharedPtr& frame_query,
-      const FrameSharedPtr& frame_best_match,
-      const Sophus::SE3& T_frame_query_estimate) = 0;
+      FrameSharedPtr frame_query,
+      const FrameSharedPtr& frame_best_match) = 0;
 
 private:
 

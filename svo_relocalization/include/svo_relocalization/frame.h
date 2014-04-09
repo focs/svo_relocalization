@@ -35,9 +35,8 @@ struct Feature {
 
 class Frame
 {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   std::vector<Feature> features_;
   std::vector<cv::Mat> img_pyr_;

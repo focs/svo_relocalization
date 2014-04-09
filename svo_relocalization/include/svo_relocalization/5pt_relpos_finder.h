@@ -17,8 +17,7 @@ public:
 
   Sophus::SE3 findRelpos(
       const FrameSharedPtr& frame_query,
-      const FrameSharedPtr& frame_best_match,
-      const Sophus::SE3& T_frame_query_estimate);
+      const FrameSharedPtr& frame_best_match);
 
 private:
 

@@ -2,7 +2,6 @@
 #ifndef SVO_RELOCALIZATION_MULTIPLE_RELOCALIZER_H_WHVCZAKL
 #define SVO_RELOCALIZATION_MULTIPLE_RELOCALIZER_H_WHVCZAKL
 
-#include <svo_relocalization/abstract_relocalizer.h>
 
 #include <svo_relocalization/frame.h>
 #include <svo_relocalization/abstract_place_finder.h>
@@ -30,15 +29,16 @@ public:
   /// frame_query does not need to have all attributes initialized, depending
   /// the used methods some of them will not be used.
 
-  // Not sure what is it returning....
+  // Not sure what is it returning.... For now we are going to fill frame_query
+  // with the data
   bool relocalize(
-      const FrameSharedPtr &frame_query,
+      FrameSharedPtr frame_query,
       int &id_out);
 
 private:
   AbstractPlaceFinderSharedPtr place_finder_;
   AbstractRelposFinderSharedPtr relpos_finder_;
-  
+
 };
 
 }

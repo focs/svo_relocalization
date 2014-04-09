@@ -71,10 +71,11 @@ void startTest(vector<Mat> images, string path)
   CCPlaceFinder r;
   for (size_t i = 0; i < images.size(); ++i)
   {
-    vector<Mat> tmp;
-    tmp.push_back(images.at(i));
+    FrameSharedPtr frame_shared (new Frame());
+    frame_shared->img_pyr_.push_back(images.at(i));
+    frame_shared->id_ = i;
 
-    r.addFrame(tmp, Sophus::SE3(), i);
+    r.addFrame(frame_shared);
   }
 
   for (size_t i = 0; i < images.size(); ++i)
