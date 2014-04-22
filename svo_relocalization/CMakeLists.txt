@@ -73,6 +73,7 @@ add_library(svo_relocalization
   ./src/multiple_relocalizer.cpp
   ./src/5pt_relpos_finder.cpp
   ./src/3pt_relpos_finder.cpp
+  ./src/feature_detector.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}
@@ -90,6 +91,9 @@ target_link_libraries(test_relocalizer svo_relocalization)
 
 add_executable(test_confusion_matrix src/test/test_confusion_matrix.cpp)
 target_link_libraries(test_confusion_matrix svo_relocalization)
+
+add_executable(test_feature_detector src/test/test_feature_detector.cpp)
+target_link_libraries(test_feature_detector svo_relocalization)
 
 #To be removed
 add_executable(svo_node ./src/svo_relocalizer_node.cpp)

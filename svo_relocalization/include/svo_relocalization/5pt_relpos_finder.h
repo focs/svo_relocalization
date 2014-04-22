@@ -5,6 +5,8 @@
 
 #include <svo_relocalization/abstract_relpos_finder.h>
 
+#include <vikit/abstract_camera.h>
+
 
 namespace reloc
 {
@@ -12,14 +14,28 @@ namespace reloc
 class FivePtRelposFinder : public AbstractRelposFinder
 {
 public:
-  FivePtRelposFinder ();
+  struct Options {
+    uint32_t pyr_lvl_;
+
+    Options() :
+      pyr_lvl_(3)
+    {} 
+  } options_;
+
+  FivePtRelposFinder (vk::AbstractCamera *camera_model);
   virtual ~FivePtRelposFinder ();
 
+  void removeFrame(int frame_id);
+
+  void addFrame(const FrameSharedPtr &frame);
+
   Sophus::SE3 findRelpos(
-      const FrameSharedPtr& frame_query,
+      FrameSharedPtr frame_query,
       const FrameSharedPtr& frame_best_match);
 
 private:
+
+  vk::AbstractCamera *camera_model_;
 
 };
 

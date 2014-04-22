@@ -14,12 +14,10 @@ class ThreePtRelposFinder : public AbstractRelposFinder
 public:
 
   struct Options {
-    size_t n_iterations;
-    double reprojection_error;
+    uint32_t pyr_lvl_;
 
     Options() :
-      n_iterations(300),
-      reprojection_error(2.0)
+      pyr_lvl_(3)
     {} 
   } options_;
 
@@ -27,7 +25,7 @@ public:
   virtual ~ThreePtRelposFinder ();
 
   Sophus::SE3 findRelpos(
-      const FrameSharedPtr& frame_query,
+      FrameSharedPtr frame_query,
       const FrameSharedPtr& frame_best_match);
 
 private:

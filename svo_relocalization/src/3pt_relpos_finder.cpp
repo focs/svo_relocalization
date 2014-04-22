@@ -23,7 +23,7 @@ ThreePtRelposFinder::~ThreePtRelposFinder ()
 }
 
 Sophus::SE3 ThreePtRelposFinder::findRelpos(
-    const FrameSharedPtr& frame_query,
+    FrameSharedPtr frame_query,
     const FrameSharedPtr& frame_best_match)
 {
 

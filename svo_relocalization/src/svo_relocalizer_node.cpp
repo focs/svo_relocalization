@@ -39,6 +39,7 @@
 #include <svo_relocalization/multiple_relocalizer.h>
 #include <svo_relocalization/cc_place_finder.h>
 #include <svo_relocalization/esm_relpos_finder.h>
+#include <svo_relocalization/5pt_relpos_finder.h>
 
 namespace svo {
 
@@ -87,7 +88,8 @@ VoNode() :
 
   // Create relocalizer
   reloc::AbstractPlaceFinderSharedPtr place_finder (new reloc::CCPlaceFinder());
-  reloc::AbstractRelposFinderSharedPtr relpos_finder (new reloc::ESMRelposFinder(cam_));
+  //reloc::AbstractRelposFinderSharedPtr relpos_finder (new reloc::ESMRelposFinder(cam_));
+  reloc::AbstractRelposFinderSharedPtr relpos_finder (new reloc::FivePtRelposFinder(cam_));
   relocalizer_ = new reloc::MultipleRelocalizer (place_finder, relpos_finder);
 
   // Init camera
@@ -160,7 +162,7 @@ imgCb(const sensor_msgs::ImageConstPtr& msg)
 
   }
 
-  if(vo_->stage == RELOCALIZING) 
+  //if(vo_->stage == RELOCALIZING) 
 
 
   if(vo_->stage() == FrameHandlerMono::STAGE_PAUSED)

@@ -12,6 +12,7 @@ namespace reloc
 
 class ESMRelposFinder : public AbstractRelposFinder
 {
+public:
   struct Options {
     uint32_t pyr_lvl_;
     uint32_t n_iter_se2_to_se3_;
@@ -22,7 +23,6 @@ class ESMRelposFinder : public AbstractRelposFinder
     {} 
   } options_;
 
-public:
   ESMRelposFinder(vk::AbstractCamera *camera_model);
   virtual ~ESMRelposFinder();
 

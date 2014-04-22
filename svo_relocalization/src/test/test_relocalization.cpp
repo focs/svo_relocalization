@@ -9,6 +9,7 @@
 #include <svo_relocalization/multiple_relocalizer.h>
 #include <svo_relocalization/cc_place_finder.h>
 #include <svo_relocalization/esm_relpos_finder.h>
+#include <svo_relocalization/5pt_relpos_finder.h>
 #include <svo_relocalization/frame.h>
 
 using namespace std;
@@ -72,7 +73,9 @@ int main(int argc, char const *argv[])
 
   AbstractPlaceFinderSharedPtr cc_shared (new CCPlaceFinder());
   AbstractRelposFinderSharedPtr esm_shared (new ESMRelposFinder(&my_camera));
-  MultipleRelocalizer relocalizer(cc_shared, esm_shared);
+  AbstractRelposFinderSharedPtr fivept_shared (new FivePtRelposFinder(&my_camera));
+
+  MultipleRelocalizer relocalizer(cc_shared, fivept_shared);
 
   int query_idx = 253;
   for (size_t i = 0; i < images.size(); i+=1)
