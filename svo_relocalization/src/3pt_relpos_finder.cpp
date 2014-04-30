@@ -12,12 +12,23 @@
 namespace reloc
 {
   
-ThreePtRelposFinder::ThreePtRelposFinder ()
+ThreePtRelposFinder::ThreePtRelposFinder (vk::AbstractCamera *camera_model) :
+  camera_model_(camera_model)
 {
 
 }
 
 ThreePtRelposFinder::~ThreePtRelposFinder ()
+{
+
+}
+
+void ThreePtRelposFinder::removeFrame(int frame_id)
+{
+
+}
+
+void ThreePtRelposFinder::addFrame(const FrameSharedPtr &frame)
 {
 
 }

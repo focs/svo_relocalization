@@ -33,6 +33,7 @@ public:
   // with the data
   bool relocalize(
       FrameSharedPtr frame_query,
+      Sophus::SE3 &pose_out,
       int &id_out);
 
 private:

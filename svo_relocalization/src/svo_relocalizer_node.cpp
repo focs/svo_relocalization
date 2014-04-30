@@ -153,7 +153,8 @@ imgCb(const sensor_msgs::ImageConstPtr& msg)
     {
       // run relocalizer
       int found_id;
-      relocalizer_->relocalize(data, found_id);
+      Sophus::SE3 pose_out;
+      relocalizer_->relocalize(data, pose_out, found_id);
 
       std::cout << "Found position " << found_id << std::endl << data->T_frame_world_;
       std::cout << "Actual position: " << frame->id_ << std::endl << frame->T_f_w_ << std::endl;

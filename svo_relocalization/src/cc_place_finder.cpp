@@ -39,7 +39,6 @@ void CCPlaceFinder::addFrame(const FrameSharedPtr &frame)
   ExtendedFrame tmp_ip = {im_small_blur_0mean, frame};
   images_.push_back(tmp_ip);
 
-  std::cout << "Frame added in CCPlaceFinder" << std::endl;
 }
 
 FrameSharedPtr CCPlaceFinder::findPlace(FrameSharedPtr frame_query)
@@ -116,7 +115,6 @@ cv::Mat CCPlaceFinder::convertToSmallBlurryImage(const std::vector<cv::Mat>& img
   cv::Mat im_small;
   if (std::abs(im_float.size().height - s.height) > 10 || std::abs(im_float.size().width - s.width) > 10)
   {
-    std::cout << "Resizeing imag" << std::endl;
     cv::resize(im_float, im_small, s);
   }
   else

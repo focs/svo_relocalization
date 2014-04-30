@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   vikit_common
   vikit_ros
-  opengv
+  opengv 
   # To be removed
   svo
   svo_ros

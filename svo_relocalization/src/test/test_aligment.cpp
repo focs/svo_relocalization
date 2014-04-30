@@ -42,6 +42,15 @@ int main(int argc, char const *argv[])
       test_image.type());
   cv::warpAffine(test_image, im_warp, warp_mat, im_warp.size(), INTER_LINEAR, BORDER_CONSTANT, 0);
   //cout << im_warp << endl;
+  
+   
+  test_image = cv::imread("/home/fox/Documents/vibot/masterThesisZurich/relocalizer_1/data/test_reloc_1_2014-04-24_17-41-22/image14538.png");
+  cv::Size s (test_image.cols/4, test_image.rows/4) ;
+  cv::resize(test_image, test_image, s);
+
+  im_warp = cv::imread("/home/fox/Documents/vibot/masterThesisZurich/relocalizer_1/data/test_reloc_1_2014-04-24_17-41-22/image14428.png");
+  cv::resize(im_warp, im_warp, s);
+
 
   namedWindow( "Display window", WINDOW_AUTOSIZE );
   imshow( "Display window", im_warp );

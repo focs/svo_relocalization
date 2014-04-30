@@ -5,6 +5,8 @@
 
 #include <svo_relocalization/abstract_relpos_finder.h>
 
+#include <vikit/abstract_camera.h>
+
 
 namespace reloc
 {
@@ -21,14 +23,19 @@ public:
     {} 
   } options_;
 
-  ThreePtRelposFinder ();
+  ThreePtRelposFinder (vk::AbstractCamera *camera_model);
   virtual ~ThreePtRelposFinder ();
+
+  void removeFrame(int frame_id);
+
+  void addFrame(const FrameSharedPtr &frame);
 
   Sophus::SE3 findRelpos(
       FrameSharedPtr frame_query,
       const FrameSharedPtr& frame_best_match);
 
 private:
+  vk::AbstractCamera *camera_model_;
 
 };
 

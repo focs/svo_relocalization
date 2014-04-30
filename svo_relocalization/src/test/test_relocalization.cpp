@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <map>
 #include <Eigen/Core>
 #include <sophus/se3.h>
 #include <vikit/atan_camera.h>
@@ -10,39 +11,59 @@
 #include <svo_relocalization/cc_place_finder.h>
 #include <svo_relocalization/esm_relpos_finder.h>
 #include <svo_relocalization/5pt_relpos_finder.h>
+#include <svo_relocalization/3pt_relpos_finder.h>
+#include <svo_relocalization/empty_relpos_finder.h>
 #include <svo_relocalization/frame.h>
 
 using namespace std;
 using namespace Eigen;
 using namespace reloc;
+using namespace cv;
 
-
-void readMatrixFromFile (vector<cv::Mat>& images, vector<Sophus::SE3>& poses, vector<int>& ids)
+void createPyr (const cv::Mat &im, int num_lvl, vector<Mat> &pyr_out)
 {
-  std::ifstream file_in("/home/fox/catkin_ws/src/svo_relocalization/test_data/pose.txt");
+  pyr_out.push_back(im);
 
-  string path ("/home/fox/catkin_ws/src/svo_relocalization/test_data/");
+  for (size_t i = 1; i < num_lvl; ++i)
+  {
+    Size s (pyr_out[i-1].cols/2, pyr_out[i-1].rows/2);
+    Mat resized;
+    cv::resize(pyr_out[i-1], resized, s);
+    pyr_out.push_back(resized);
+  }
+
+}
+
+void readData (string path, vector<FrameSharedPtr> &data, map<int, FrameSharedPtr> &data_map)
+{
+  std::ifstream file_in(path + string("pose.txt"));
   string line;
   int id=0;
   float x, y, z;
   float rw, rx, ry, rz;
 
   while (!file_in.eof())
-  //for (size_t i = 0; i < 100; ++i)
   {
     file_in >> id >> x >> y >> z >>  rx >> ry >> rz >> rw;
     
     stringstream filename;
     filename << path << "image" << id << ".png";
+
     cv::Mat im;
     im = cv::imread(filename.str(), CV_LOAD_IMAGE_GRAYSCALE);
-    images.push_back(im);
 
     Vector3d t(x,y,z);
     Eigen::Quaterniond q(rw, rx, ry, rz);
-    poses.push_back(Sophus::SE3(q, t));
+    Sophus::SE3 T_frame_world (q, t);
 
-    ids.push_back(id);
+    FrameSharedPtr f (new Frame());
+
+    createPyr(im, 4, f->img_pyr_);
+    f->T_frame_world_ = T_frame_world;
+    f->id_ = id;
+
+    data.push_back(f);
+    data_map[f->id_] = f;
   }
 
   file_in.close();
@@ -50,54 +71,102 @@ void readMatrixFromFile (vector<cv::Mat>& images, vector<Sophus::SE3>& poses, ve
 
 int main(int argc, char const *argv[])
 {
-  // Camera intrinsic parameters 
-  float cam_width = 752;
-  float cam_height = 480;
-  Vector2d cam_size (cam_width, cam_height);
-  float cam_fx = 0.582533;
-  float cam_fy = 0.910057;
-  float cam_cx = 0.510927;
-  float cam_cy = 0.526193;
-  float cam_d0 = 0.916379;
 
+  string training_images_path  = argv[1];
+  string testing_images_path = argv[2];
+  string results_path = argv[3];
+
+  string place_finder_type = argv[4];
+  string relpos_finder_type = argv[5];
+
+  // Camera intrinsic parameters 
+  float cam_width = std::stof(argv[6]);
+  float cam_height = std::stof(argv[7]);
+  Vector2d cam_size (cam_width, cam_height);
+  float cam_fx = std::stof(argv[ 8]);
+  float cam_fy = std::stof(argv[ 9]);
+  float cam_cx = std::stof(argv[10]);
+  float cam_cy = std::stof(argv[11]);
+  float cam_d0 = std::stof(argv[12]);
   vk::ATANCamera my_camera (cam_width, cam_height, cam_fx, cam_fy, cam_cx, cam_cy, cam_d0); 
 
-  vector<cv::Mat> images;
-  vector<Sophus::SE3> poses;
-  vector<int> ids;
-
-  readMatrixFromFile(images, poses, ids);
-  cout << images.size() << endl;
-  cout << "Image size: " << images[0].size() << endl;
-
-
-  AbstractPlaceFinderSharedPtr cc_shared (new CCPlaceFinder());
-  AbstractRelposFinderSharedPtr esm_shared (new ESMRelposFinder(&my_camera));
-  AbstractRelposFinderSharedPtr fivept_shared (new FivePtRelposFinder(&my_camera));
-
-  MultipleRelocalizer relocalizer(cc_shared, fivept_shared);
-
-  int query_idx = 253;
-  for (size_t i = 0; i < images.size(); i+=1)
+  AbstractPlaceFinderSharedPtr place_finder;
+  if (place_finder_type == string("CC"))
   {
-    if (i != static_cast<size_t>(query_idx))
-    {
-      // Create and fill frame
-      FrameSharedPtr frame_shared (new Frame());
-      frame_shared->img_pyr_.push_back(images.at(i));
-      frame_shared->T_frame_world_ = poses.at(i);
-      frame_shared->id_ = ids.at(i);
-      
-      relocalizer.addFrame(frame_shared);
-    }
+    place_finder = AbstractPlaceFinderSharedPtr (new CCPlaceFinder());
+  } else
+  {
+    cerr << "Place Finder type not found" << endl;
+    exit(-1);
   }
 
-  cout << "Query image id: " << ids.at(query_idx) << endl;
-  int id_out;
-  FrameSharedPtr frame_shared (new Frame());
-  frame_shared->img_pyr_.push_back(images.at(query_idx));
+  AbstractRelposFinderSharedPtr relpos_finder;
+  if (relpos_finder_type == string("ESM"))
+  {
+    ESMRelposFinder *esm_pf = new ESMRelposFinder(&my_camera);
+    esm_pf->options_.pyr_lvl_ = 3;
+    relpos_finder = AbstractRelposFinderSharedPtr (esm_pf);
+  } else if (relpos_finder_type == string("5pt"))
+  {
+    relpos_finder = AbstractRelposFinderSharedPtr (new FivePtRelposFinder(&my_camera));
+  } else if (relpos_finder_type == string("3pt"))
+  {
+    relpos_finder = AbstractRelposFinderSharedPtr (new ThreePtRelposFinder(&my_camera));
+  } else if (relpos_finder_type == string("empty"))
+  {
+    relpos_finder = AbstractRelposFinderSharedPtr (new EmptyRelposFinder());
+  } else
+  {
+    cerr << "Relpos Finder type not found" << endl;
+    exit(-1);
+  }
+  MultipleRelocalizer relocalizer(place_finder, relpos_finder);
 
-  relocalizer.relocalize(frame_shared, id_out);
+  // Structures to hold data
+  vector<FrameSharedPtr> training_data;
+  vector<FrameSharedPtr> testing_data;
+  map<int, FrameSharedPtr> testing_data_map;
+  map<int, FrameSharedPtr> training_data_map;
+
+  readData(training_images_path, training_data, training_data_map);
+  readData(testing_images_path, testing_data, testing_data_map);
+
+  cout << "Number training images: " << training_data.size() << endl;
+  cout << "Number test images: " << testing_data.size() << endl;
+  cout << "Number training images: " << training_data_map.size() << endl;
+  cout << "Number test images: " << testing_data_map.size() << endl;
+  
+
+  for (size_t i = 0; i < training_data.size(); i+=1)
+  {
+    relocalizer.addFrame(training_data.at(i));
+    //cout << "Addin training image id: " << training_data.at(i)->id_ << endl;
+  }
+
+
+  std::ofstream file_out (results_path + string("pose.txt"));
+  for (size_t i = 0; i < testing_data.size(); ++i)
+  {
+    int id_out;
+    Sophus::SE3 pose_out;
+    relocalizer.relocalize(testing_data.at(i), pose_out, id_out);
+
+    file_out << testing_data.at(i)->id_ << " " << 
+      pose_out.translation()[0] << " " <<
+      pose_out.translation()[1] << " " <<
+      pose_out.translation()[2] << " " <<
+      pose_out.unit_quaternion().x() << " " <<
+      pose_out.unit_quaternion().y() << " " <<
+      pose_out.unit_quaternion().z() << " " <<
+      pose_out.unit_quaternion().w() << endl;
+    //namedWindow( "Test img", WINDOW_AUTOSIZE );
+    //imshow( "Test img", testing_data.at(i)->img_pyr_.at(0));
+    //namedWindow( "Found img", WINDOW_AUTOSIZE );
+    //imshow( "Found img", training_data_map[id_out]->img_pyr_.at(0));
+    //waitKey(0);          
+  }
+  file_out.close();
+  
 
 
   return 0;

@@ -57,11 +57,16 @@ double SecondOrderMinimizationSE2::computeResiduals (
   cv::Sobel(im_warp, im_warp_grad_y, CV_32F, 0, 1, 1);
 
   // Compute mean grad
-  cv::Mat im_grad_mean_x = 0.25*(im_template_grad_x_ + im_warp_grad_y);
+  cv::Mat im_grad_mean_x = 0.25*(im_template_grad_x_ + im_warp_grad_x);
   cv::Mat im_grad_mean_y = 0.25*(im_template_grad_y_ + im_warp_grad_y);
 
   // Compute error image
   cv::Mat im_error = im_template_ - im_warp;
+
+  //cv::imwrite("/tmp/im_template.png", im_template_);
+  //cv::imwrite("/tmp/im_warp.png", im_warp);
+  //cv::imwrite("/tmp/im_error.png", im_error);
+  //getchar();
 
   float chi2 = 0;
   int num_pix = 0;

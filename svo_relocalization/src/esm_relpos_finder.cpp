@@ -31,13 +31,17 @@ Sophus::SE3 ESMRelposFinder::findRelpos(
     const FrameSharedPtr& frame_best_match)
 {
 
+  // Optimizing from first parameter towards second
   SecondOrderMinimizationSE2 motion_estimator(
-      frame_query->img_pyr_.at(options_.pyr_lvl_),
-      frame_best_match->img_pyr_.at(options_.pyr_lvl_));
+      frame_best_match->img_pyr_.at(options_.pyr_lvl_),
+      frame_query->img_pyr_.at(options_.pyr_lvl_));
   
   // Model set to 0
   Sophus::SE2 se2_T_query_template;
   motion_estimator.optimize(se2_T_query_template);
+  std::cout << "Found SE2: " << se2_T_query_template << std::endl;
+
+  se2_T_query_template.translation() = se2_T_query_template.translation()*pow(2, options_.pyr_lvl_);
 
   // Apply found rotation to the known frame rotation
   Sophus::SE3 se3_T_query_template;
@@ -46,7 +50,13 @@ Sophus::SE3 ESMRelposFinder::findRelpos(
       camera_model_,
       options_.n_iter_se2_to_se3_);
 
-  return se3_T_query_template * frame_best_match->T_frame_world_;
+  std::cout << "Found SE3: " << se3_T_query_template << std::endl;
+
+  Sophus::SE3 se3_T_query_template_final = frame_best_match->T_frame_world_;
+  se3_T_query_template_final.so3() = se3_T_query_template.so3() * se3_T_query_template_final.so3();
+
+  return se3_T_query_template_final;
+  //return se3_T_query_template * frame_best_match->T_frame_world_;
 }
 
 Sophus::SE3 ESMRelposFinder::findSE3(
