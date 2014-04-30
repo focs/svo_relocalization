@@ -29,7 +29,7 @@ def main():
   ensure_dir(extract_directory)
 
   pose = []
-  for topic, msg, t in bag.read_messages(topics=['/nanoslam/dense_input']):
+  for topic, msg, t in bag.read_messages(topics=['/biggie/svo/dense_input']):
     im = np.fromstring(msg.image.data, np.uint8)
     im = im.reshape((msg.image.height, msg.image.width))
     cv2.imwrite(extract_directory+name_patter.format(msg.frame_id),  im)
@@ -43,7 +43,7 @@ def main():
       msg.pose.orientation.z,
       msg.pose.orientation.w])
     
-  # save poses in a file [id x y z rx ry rz]
+  # save poses in a file [id x y z rx ry rz rw]
   np.savetxt(extract_directory+'pose.txt', pose, ['%d', '%f', '%f', '%f', '%f', '%f', '%f', '%f'])
   bag.close()
 
