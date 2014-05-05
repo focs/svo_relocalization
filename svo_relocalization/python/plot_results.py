@@ -17,30 +17,31 @@ if __name__ == '__main__':
   d = np.linalg.norm(diff, axis=1)
   fig = plt.figure()
   plt.hist(d, 60)
+  fig.show()
 
 
   fig = plt.figure()
   ax = fig.gca(projection='3d')
   cmap = cm.get_cmap('gist_rainbow')
-  #for i in range(0, results_data.shape[0]-1, 3):
+  for i in range(0, results_data.shape[0]-1, 3):
   #for i in range(results_data.shape[0]-1):
-  #  color = cmap(1.0/results_data.shape[0]*i)
-  #  #color = cmap(np.random.rand())
-  #  #color = [1,0,0]
-  #  T = np.eye(4)
-  #  T[0:3,0:3] = quat2rot(np.mat(test_data[i,4:]).T)
-  #  T[0:3,3] = test_data[i,1:4]
+    color = cmap(1.0/results_data.shape[0]*i)
+    #color = cmap(np.random.rand())
+    #color = [1,0,0]
+    T = np.eye(4)
+    T[0:3,0:3] = quat2rot(np.mat(test_data[i,4:]).T)
+    T[0:3,3] = test_data[i,1:4]
 
-  #  tmp_coor = Coordinates(T)
-  #  tmp_coor.selfPlot(ax, color)
+    tmp_coor = Coordinates(T)
+    tmp_coor.selfPlot(ax, color)
 
-  #  #color = [0,0,1]
-  #  T = np.eye(4)
-  #  T[0:3,0:3] = quat2rot(np.mat(results_data[i,4:]).T)
-  #  T[0:3,3] = results_data[i,1:4]
+    #color = [0,0,1]
+    T = np.eye(4)
+    T[0:3,0:3] = quat2rot(np.mat(results_data[i,4:]).T)
+    T[0:3,3] = results_data[i,1:4]
 
-  #  tmp_coor = Coordinates(T)
-  #  tmp_coor.selfPlot(ax, color)
+    tmp_coor = Coordinates(T)
+    tmp_coor.selfPlot(ax, color)
 
   ax.plot(test_data[:,1], test_data[:,2], test_data[:,3])
   ax.plot(results_data[:,1], results_data[:,2], results_data[:,3])
