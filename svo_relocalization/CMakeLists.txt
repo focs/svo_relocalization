@@ -78,6 +78,7 @@ add_library(svo_relocalization
   ./src/5pt_relpos_finder.cpp
   ./src/3pt_relpos_finder.cpp
   ./src/feature_detector.cpp
+  ./src/naive_place_finder.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}

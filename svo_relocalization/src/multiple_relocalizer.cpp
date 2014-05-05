@@ -39,7 +39,6 @@ bool MultipleRelocalizer::relocalize(
   found_frame = place_finder_->findPlace(frame_query);
 
   id_out = found_frame->id_;
-  std::cout << "transformation of the found frame: " << std::endl << found_frame->T_frame_world_;
 
   pose_out = relpos_finder_->findRelpos(frame_query, found_frame);
 

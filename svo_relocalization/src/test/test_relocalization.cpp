@@ -9,6 +9,7 @@
 #include <vikit/atan_camera.h>
 #include <svo_relocalization/multiple_relocalizer.h>
 #include <svo_relocalization/cc_place_finder.h>
+#include <svo_relocalization/naive_place_finder.h>
 #include <svo_relocalization/esm_relpos_finder.h>
 #include <svo_relocalization/5pt_relpos_finder.h>
 #include <svo_relocalization/3pt_relpos_finder.h>
@@ -19,6 +20,7 @@ using namespace std;
 using namespace Eigen;
 using namespace reloc;
 using namespace cv;
+
 
 void createPyr (const cv::Mat &im, int num_lvl, vector<Mat> &pyr_out)
 {
@@ -51,6 +53,7 @@ void readData (string path, vector<FrameSharedPtr> &data, map<int, FrameSharedPt
 
     cv::Mat im;
     im = cv::imread(filename.str(), CV_LOAD_IMAGE_GRAYSCALE);
+    cv::flip(im,im, -1);
 
     Vector3d t(x,y,z);
     Eigen::Quaterniond q(rw, rx, ry, rz);
@@ -94,6 +97,9 @@ int main(int argc, char const *argv[])
   if (place_finder_type == string("CC"))
   {
     place_finder = AbstractPlaceFinderSharedPtr (new CCPlaceFinder());
+  } else if (place_finder_type == string("naive"))
+  {
+    place_finder = AbstractPlaceFinderSharedPtr (new NaivePlaceFinder());
   } else
   {
     cerr << "Place Finder type not found" << endl;
@@ -108,7 +114,11 @@ int main(int argc, char const *argv[])
     relpos_finder = AbstractRelposFinderSharedPtr (esm_pf);
   } else if (relpos_finder_type == string("5pt"))
   {
-    relpos_finder = AbstractRelposFinderSharedPtr (new FivePtRelposFinder(&my_camera));
+    FivePtRelposFinder *five_pf = new FivePtRelposFinder(&my_camera);
+    five_pf->options_.pyr_lvl_ = 3;
+
+    relpos_finder = AbstractRelposFinderSharedPtr (five_pf);
+
   } else if (relpos_finder_type == string("3pt"))
   {
     relpos_finder = AbstractRelposFinderSharedPtr (new ThreePtRelposFinder(&my_camera));

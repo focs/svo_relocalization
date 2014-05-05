@@ -16,22 +16,37 @@ void FeatureDetector::FASTFindFeatures(
 
 }
 
-void FeatureDetector::keyPointVector_to_frame(
+void FeatureDetector::FASTFindFeaturesPyr(
+    const std::vector<cv::Mat> &imgs,
+    int pyr_lvl,
+    std::vector<std::vector<cv::KeyPoint>> &found_features)
+{
+  for (size_t i = 0; i <= pyr_lvl; ++i)
+  {
+    FASTFindFeatures(imgs.at(i), found_features.at(i));
+  }
+}
+
+void FeatureDetector::keyPointVectorToFrame(
     FrameSharedPtr frame,
-    const std::vector<cv::KeyPoint> &keypoints)
+    const std::vector<std::vector<cv::KeyPoint>> &keypoints)
 {
   
   for (size_t i = 0; i < keypoints.size(); ++i)
   {
-    Feature f;
-    f.px_ << keypoints.at(i).pt.x, keypoints.at(i).pt.y;
-    frame->features_.push_back(f);
+    for (size_t j = 0; j < keypoints.at(i).size(); ++j)
+    {
+      Feature f;
+      f.px_ << keypoints.at(i).at(j).pt.x, keypoints.at(i).at(j).pt.y;
+      f.pyr_lvl_ = i;
+      frame->features_.push_back(f);
+    }
   }
 
 }
 
-void FeatureDetector::frame_to_keyPointVector(
-    std::vector<cv::KeyPoint> &keypoints,
+void FeatureDetector::frameToKeyPointVector(
+    std::vector<std::vector<cv::KeyPoint>> &keypoints,
     const FrameSharedPtr frame)
 {
   
@@ -41,12 +56,12 @@ void FeatureDetector::frame_to_keyPointVector(
     p.pt = cv::Point2f(frame->features_.at(i).px_[0], frame->features_.at(i).px_[1]);
     p.size = 7.0f;
     p.response = 90;
-    keypoints.push_back(p);
+    keypoints.at(frame->features_.at(i).pyr_lvl_).push_back(p);
   }
 
 }
 
-void FeatureDetector::SURFExtract_descriptor (
+void FeatureDetector::SURFExtractDescriptor (
     const cv::Mat &img,
     std::vector<cv::KeyPoint> &keypoints,
     cv::Mat &descriptors)

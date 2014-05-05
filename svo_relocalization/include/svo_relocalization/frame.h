@@ -17,6 +17,7 @@ struct Feature {
   Eigen::Vector2d px_; 
   double depth_;
   size_t point_id_;
+  size_t pyr_lvl_;
 
   Feature () : 
     px_(Eigen::Vector2d(0.0, 0.0)),

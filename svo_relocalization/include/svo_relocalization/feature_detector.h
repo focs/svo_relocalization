@@ -19,16 +19,21 @@ public:
       const cv::Mat &frame,
       std::vector<cv::KeyPoint> &found_features);
 
-  // Copy found points to the frame
-  static void keyPointVector_to_frame(
-      FrameSharedPtr frame,
-      const std::vector<cv::KeyPoint> &keypoints);
+  static void FASTFindFeaturesPyr(
+      const std::vector<cv::Mat> &imgs,
+      int pyr_lvl,
+      std::vector<std::vector<cv::KeyPoint>> &found_features);
 
-  static void frame_to_keyPointVector(
-      std::vector<cv::KeyPoint> &keypoints,
+  // Copy found points to the frame
+  static void keyPointVectorToFrame(
+      FrameSharedPtr frame,
+      const std::vector<std::vector<cv::KeyPoint>> &keypoints);
+
+  static void frameToKeyPointVector(
+      std::vector<std::vector<cv::KeyPoint>> &keypoints,
       const FrameSharedPtr frame);
 
-  static void SURFExtract_descriptor (
+  static void SURFExtractDescriptor (
       const cv::Mat &img,
       std::vector<cv::KeyPoint> &keypoints,
       cv::Mat &descriptors);
