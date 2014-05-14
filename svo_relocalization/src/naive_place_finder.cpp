@@ -27,7 +27,7 @@ void NaivePlaceFinder::addFrame(const FrameSharedPtr &frame_data)
 /// Should return the id of the most similar frame
 FrameSharedPtr NaivePlaceFinder::findPlace(FrameSharedPtr frame_query)
 {
-  double min_dist = std::numeric_limits<float>::max();
+  double min_dist = std::numeric_limits<double>::max();
   int frame_idx = 0; // Hope that there is one frame at least
 
   for (size_t i = 0; i < frames.size(); ++i)

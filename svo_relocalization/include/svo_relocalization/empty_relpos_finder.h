@@ -24,7 +24,7 @@ public:
       FrameSharedPtr frame_query,
       const FrameSharedPtr& frame_best_match)
   {
-    return frame_best_match->T_frame_world_;
+    return Sophus::SE3();
     
   };
 
