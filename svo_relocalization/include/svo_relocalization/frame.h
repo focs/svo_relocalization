@@ -44,6 +44,21 @@ public:
   Sophus::SE3 T_frame_world_;
   size_t id_;
 
+  static void createPyr (
+      const cv::Mat &im,
+      int num_lvl,
+      std::vector<cv::Mat> &pyr_out)
+  {
+    pyr_out.push_back(im);
+
+    for (size_t i = 1; i < num_lvl; ++i)
+    {
+      cv::Size s (pyr_out[i-1].cols/2, pyr_out[i-1].rows/2);
+      cv::Mat resized;
+      cv::resize(pyr_out[i-1], resized, s);
+      pyr_out.push_back(resized);
+    }
+  }
 };
 
 typedef std::shared_ptr<Frame> FrameSharedPtr;

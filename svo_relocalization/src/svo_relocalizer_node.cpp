@@ -18,6 +18,8 @@
 #include <string>
 #include <svo/frame.h>
 #include <svo/frame_handler_mono.h>
+#include <svo/feature.h> //Quim
+#include <svo/point.h> //Quim
 #include <svo/map.h>
 #include <svo/config.h>
 #include <svo_ros/visualizer.h>
@@ -36,10 +38,13 @@
 #include <vikit/camera_loader.h>
 #include <vikit/user_input_thread.h>
 
+#include <svo/feature_detection.h>
 #include <svo_relocalization/multiple_relocalizer.h>
 #include <svo_relocalization/cc_place_finder.h>
 #include <svo_relocalization/esm_relpos_finder.h>
 #include <svo_relocalization/5pt_relpos_finder.h>
+#include <svo_relocalization/3pt_relpos_finder.h>
+#include <svo_relocalization/empty_relpos_finder.h>
 
 namespace svo {
 
@@ -88,8 +93,19 @@ VoNode() :
 
   // Create relocalizer
   reloc::AbstractPlaceFinderSharedPtr place_finder (new reloc::CCPlaceFinder());
-  //reloc::AbstractRelposFinderSharedPtr relpos_finder (new reloc::ESMRelposFinder(cam_));
-  reloc::AbstractRelposFinderSharedPtr relpos_finder (new reloc::FivePtRelposFinder(cam_));
+
+  reloc::ESMRelposFinder *ESM_rpf = new reloc::ESMRelposFinder(cam_);
+  ESM_rpf->options_.pyr_lvl_ = 3;
+  ESM_rpf->options_.n_iter_se2_to_se3_ = 3;
+
+  reloc::FivePtRelposFinder *five_rpf = new reloc::FivePtRelposFinder(cam_);
+  five_rpf->options_.pyr_lvl_ = 4;
+  reloc::ThreePtRelposFinder *three_rpf = new reloc::ThreePtRelposFinder(cam_);
+  three_rpf->options_.pyr_lvl_ = 4;
+  reloc::EmptyRelposFinder *empty_rpf = new reloc::EmptyRelposFinder();
+
+  reloc::AbstractRelposFinderSharedPtr relpos_finder (ESM_rpf);
+
   relocalizer_ = new reloc::MultipleRelocalizer (place_finder, relpos_finder);
 
   // Set initial position and orientation
@@ -106,6 +122,7 @@ VoNode() :
   vo_->start();
 }
 
+
 VoNode::
 ~VoNode()
 {
@@ -113,6 +130,40 @@ VoNode::
   delete user_input_thread_;
   delete cam_;
   delete relocalizer_;
+}
+
+void svo2reloc (FramePtr svo_frame, reloc::FrameSharedPtr reloc_frame)
+{
+
+  reloc_frame->img_pyr_ = svo_frame->img_pyr_;
+  reloc_frame->id_ = svo_frame->id_;
+  reloc_frame->T_frame_world_ = svo_frame->T_f_w_;
+
+  for (Features::iterator it = svo_frame->fts_.begin(); it != svo_frame->fts_.end(); it++)
+  {
+    double depth = 0;
+
+    if ((*it)->point != NULL)
+    {
+      //std::cout << (*it)->point << " and "  << std::flush;
+      //std::cout << (*it)->point->id_ << std::endl;
+      depth = (svo_frame->pos() - (*it)->point->pos_).norm();
+    }
+
+    Vector2d px = (*it)->px;
+    int pyr_lvl = (*it)->level;
+    //px << (static_cast<int>(px[0]) >> pyr_lvl), (static_cast<int>(px[1]) >> pyr_lvl);
+
+    reloc::Feature f;
+    f.depth_ = depth;
+    f.px_ = px;
+    f.pyr_lvl_ = pyr_lvl;
+
+    reloc_frame->features_.push_back(f);
+    
+  }
+
+  cout << "Number of features in reloc frame " << reloc_frame->features_.size() << endl;
 }
 
 void VoNode::
@@ -125,44 +176,65 @@ imgCb(const sensor_msgs::ImageConstPtr& msg)
     ROS_ERROR("cv_bridge exception: %s", e.what());
   }
   processUserActions();
-  vo_->addImage(img, msg->header.stamp.toSec());
+
+  if (vo_->stage() == FrameHandlerMono::STAGE_RELOCALIZING)
+  {
+    FramePtr frame(new Frame(cam_, img, msg->header.stamp.toSec()));
+
+    feature_detection::FastDetector detector(
+        img.cols,
+        img.rows,
+        Config::gridSize(),
+        Config::nPyrLevels());
+
+    detector.detect(
+        frame.get(),
+        frame->img_pyr_,
+        Config::triangMinCornerScore(),
+        frame->fts_);
+    
+    // Create new reloc frame from the image (create pyr)
+    reloc::FrameSharedPtr data(new reloc::Frame());
+    svo2reloc(frame, data);
+
+    // run relocalize
+    int found_id;
+    Sophus::SE3 pose_out;
+    relocalizer_->relocalize(data, pose_out, found_id);
+
+    cout << "Found T_query_template" << endl << pose_out << endl;
+
+    vo_->relocalizeFrameAtPose(
+        found_id,
+        pose_out,
+        img,
+        msg->header.stamp.toSec());
+  }
+  else
+  {
+    vo_->addImage(img, msg->header.stamp.toSec());
+
+    if(vo_->lastFrame() != NULL && vo_->lastFrame()->isKeyframe())
+    {
+      // Create frame from svo frame
+      FramePtr frame = vo_->lastFrame();
+      reloc::FrameSharedPtr data(new reloc::Frame());
+      svo2reloc(frame, data);
+
+
+      if (data->features_.size() > 0)
+      { 
+        std::cout << "Adding frame to reloc" << std::endl;
+        relocalizer_->addFrame(data);
+      }
+    }
+  }
+
   visualizer_.publishMinimal(img, vo_->lastFrame(), *vo_, msg->header.stamp.toSec());
 
   if(publish_markers_ && vo_->stage() != FrameHandlerBase::STAGE_PAUSED)
     visualizer_.visualizeMarkers(vo_->lastFrame(), vo_->coreKeyframes(), vo_->map());
 
-  if(vo_->lastFrame() != NULL)
-  {
-    FramePtr frame = vo_->lastFrame();
-    reloc::FrameSharedPtr data(new reloc::Frame());
-    data->img_pyr_ = frame->img_pyr_;
-    data->id_ = frame->id_;
-    data->T_frame_world_ = frame->T_f_w_;
-
-
-    if(vo_->lastFrame()->isKeyframe())
-    {
-      //for(auto it = frame->fts_->begin(); it!= ...)
-      //  double depth = (frame_pos - frame->(*it)->point->pos_).norm();
-    
-      std::cout << "Adding frame to reloc" << std::endl;
-      relocalizer_->addFrame(data);
-    }
-    else
-    {
-      // run relocalizer
-      int found_id;
-      Sophus::SE3 pose_out;
-      relocalizer_->relocalize(data, pose_out, found_id);
-
-      std::cout << "Found position " << found_id << std::endl << data->T_frame_world_;
-      std::cout << "Actual position: " << frame->id_ << std::endl << frame->T_f_w_ << std::endl;
-    }
-
-
-  }
-
-  //if(vo_->stage == RELOCALIZING) 
 
 
   if(vo_->stage() == FrameHandlerMono::STAGE_PAUSED)

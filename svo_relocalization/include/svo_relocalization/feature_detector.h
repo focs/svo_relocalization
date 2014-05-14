@@ -24,6 +24,11 @@ public:
       int pyr_lvl,
       std::vector<std::vector<cv::KeyPoint>> &found_features);
 
+  static void getOpenCvFeatures (
+      const FrameSharedPtr frame,
+      int pyr_lvl,
+      std::vector<std::vector<cv::KeyPoint>> &found_features);
+
   // Copy found points to the frame
   static void keyPointVectorToFrame(
       FrameSharedPtr frame,
