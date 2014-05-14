@@ -79,6 +79,8 @@ add_library(svo_relocalization
   ./src/3pt_relpos_finder.cpp
   ./src/feature_detector.cpp
   ./src/naive_place_finder.cpp
+  ./src/fern.cpp
+  ./src/fern_classifier.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}
@@ -100,9 +102,16 @@ target_link_libraries(test_confusion_matrix svo_relocalization)
 add_executable(test_feature_detector src/test/test_feature_detector.cpp)
 target_link_libraries(test_feature_detector svo_relocalization)
 
+add_executable(test_ferns src/test/test_ferns.cpp)
+target_link_libraries(test_ferns svo_relocalization)
+
 #To be removed
 add_executable(svo_node ./src/svo_relocalizer_node.cpp)
 target_link_libraries(svo_node svo_relocalization svo)
+
+add_executable(svo_node_ferns ./src/svo_relocalizer_node_ferns.cpp)
+target_link_libraries(svo_node_ferns svo_relocalization svo)
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nano_slam_relocalization_node
 #   ${catkin_LIBRARIES}
