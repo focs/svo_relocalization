@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
 FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(Eigen REQUIRED)
 FIND_PACKAGE(Sophus REQUIRED)
+pkg_search_module(YAMLCPP REQUIRED yaml-cpp)
 
 
 ###################################
@@ -57,6 +58,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${Sophus_INCLUDE_DIRS}
+  ${YAMLCPP_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -64,6 +66,7 @@ LIST(APPEND MY_LINK_LIBS
   ${OpenCV_LIBRARIES}
   ${Sophus_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${YAMLCPP_LIBRARIES}
   ${catkin_LIBRARIES}
 )
 
@@ -81,6 +84,7 @@ add_library(svo_relocalization
   ./src/naive_place_finder.cpp
   ./src/fern.cpp
   ./src/fern_classifier.cpp
+  ./src/yaml_parse.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}
@@ -105,12 +109,14 @@ target_link_libraries(test_feature_detector svo_relocalization)
 add_executable(test_ferns src/test/test_ferns.cpp)
 target_link_libraries(test_ferns svo_relocalization)
 
+
 #To be removed
 add_executable(svo_node ./src/svo_relocalizer_node.cpp)
 target_link_libraries(svo_node svo_relocalization svo)
 
 add_executable(svo_node_ferns ./src/svo_relocalizer_node_ferns.cpp)
 target_link_libraries(svo_node_ferns svo_relocalization svo)
+
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nano_slam_relocalization_node
