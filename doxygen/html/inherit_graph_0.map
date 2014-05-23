@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classreloc_1_1_abstract_place_finder.html" title="reloc::AbstractPlaceFinder" alt="" coords="5,32,181,61"/>
+<area shape="rect" id="node3" href="$classreloc_1_1_c_c_place_finder.html" title="reloc::CCPlaceFinder" alt="" coords="237,5,384,35"/>
+<area shape="rect" id="node5" href="$classreloc_1_1_naive_place_finder.html" title="reloc::NaivePlaceFinder" alt="" coords="231,59,391,88"/>
+</map>

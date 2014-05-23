@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classreloc_1_1_abstract_relpos_finder.html" title="reloc::AbstractRelposFinder" alt="" coords="5,85,189,115"/>
+<area shape="rect" id="node3" href="$classreloc_1_1_empty_relpos_finder.html" title="reloc::EmptyRelposFinder" alt="" coords="241,5,415,35"/>
+<area shape="rect" id="node5" href="$classreloc_1_1_e_s_m_relpos_finder.html" title="reloc::ESMRelposFinder" alt="" coords="247,59,409,88"/>
+<area shape="rect" id="node7" href="$classreloc_1_1_five_pt_relpos_finder.html" title="reloc::FivePtRelposFinder" alt="" coords="241,112,415,141"/>
+<area shape="rect" id="node9" href="$classreloc_1_1_three_pt_relpos_finder.html" title="reloc::ThreePtRelposFinder" alt="" coords="237,165,419,195"/>
+</map>
