@@ -41,34 +41,70 @@ Sophus::SE3 FivePtRelposFinder::findRelpos(
 {
   // Get mean depth
   float depth_sum, mean_depth;
-  for (size_t i = 0; i < frame_best_match->features_.size(); ++i)
-  {
-    depth_sum += frame_best_match->features_.at(i).depth_;
-  }
-  mean_depth = depth_sum / frame_best_match->features_.size();
+  //for (size_t i = 0; i < frame_best_match->features_.size(); ++i)
+  //{
+  //  depth_sum += frame_best_match->features_.at(i).depth_;
+  //}
+  //mean_depth = depth_sum / frame_best_match->features_.size();
 
   int pyr_lvl = options_.pyr_lvl_;
 
-  std::vector<std::vector<cv::KeyPoint>> query_keypoints (pyr_lvl+1);
-  std::vector<std::vector<cv::KeyPoint>> best_match_keypoints (pyr_lvl+1);
+  std::vector<std::vector<cv::KeyPoint>> query_keypoints (
+      frame_query->img_pyr_.size());
+  std::map<size_t,Feature*> query_feature_phash2ptr;
+  std::vector<std::vector<cv::KeyPoint>> best_match_keypoints (
+      frame_best_match->img_pyr_.size());
+  std::map<size_t,Feature*> best_match_feature_phash2ptr;
 
-  FeatureDetector::getOpenCvFeatures(frame_query, pyr_lvl, query_keypoints);
-  FeatureDetector::getOpenCvFeatures(frame_best_match, pyr_lvl, best_match_keypoints);
+  FeatureDetector::frameToKeyPointVector(
+      query_keypoints,
+      query_feature_phash2ptr,
+      frame_query);
+  FeatureDetector::frameToKeyPointVector(
+      best_match_keypoints,
+      best_match_feature_phash2ptr,
+      frame_best_match);
 
-  std::cout << "pyr level" << pyr_lvl << std::endl;
+  int point_count;
+  // Create map idx to cvpoint
+  std::map<int,cv::KeyPoint*>query_point_idx2ptr;
+  point_count = 0;
+  for (size_t i = 0; i < query_keypoints.size(); ++i)
+  {
+    for (size_t j = 0; j < query_keypoints.at(i).size(); ++j)
+    {
+      query_point_idx2ptr[point_count++] = &query_keypoints.at(i).at(j);
+    }
+  }
+
+  // Create map idx to cvpoint
+  std::map<int,cv::KeyPoint*>best_match_point_idx2ptr;
+  point_count = 0;
+  for (size_t i = 0; i < best_match_keypoints.size(); ++i)
+  {
+    for (size_t j = 0; j < best_match_keypoints.at(i).size(); ++j)
+    {
+      best_match_point_idx2ptr[point_count++] = &best_match_keypoints.at(i).at(j);
+    }
+  }
 
   cv::Mat query_descriptors;
   cv::Mat best_match_descriptors;
   for (size_t i = 0; i <= pyr_lvl; ++i)
   {
     cv::Mat tmp;
-    FeatureDetector::SURFExtractDescriptor(frame_query->img_pyr_.at(i), query_keypoints.at(i), tmp);
+    FeatureDetector::SURFExtractDescriptor(
+        frame_query->img_pyr_.at(i),
+        query_keypoints.at(i),
+        tmp);
     query_descriptors.push_back(tmp);
 
-    FeatureDetector::SURFExtractDescriptor(frame_best_match->img_pyr_.at(i), best_match_keypoints.at(i), tmp);
+    FeatureDetector::SURFExtractDescriptor(
+        frame_best_match->img_pyr_.at(i),
+        best_match_keypoints.at(i),
+        tmp);
     best_match_descriptors.push_back(tmp);
   }
-
   std::cout << query_descriptors.rows << "  " << query_descriptors.cols << std::endl;
   std::cout << best_match_descriptors.rows << "  " << query_descriptors.cols << std::endl;
 
@@ -102,19 +138,27 @@ Sophus::SE3 FivePtRelposFinder::findRelpos(
     {
       if (m.distance <= 4*min_dist)
       {
-        matches_used.push_back(m);
-        int query_img_idx = m.queryIdx;
+        int query_idx = m.queryIdx;
         int best_match_idx = m.trainIdx;
 
+        Feature *query_feature;
+        Feature *best_match_feature;
+
+        // find pointers to referenced feature (this is fucked up)
+        query_feature = query_feature_phash2ptr[
+          query_point_idx2ptr[query_idx]->hash()];
+        best_match_feature = best_match_feature_phash2ptr[
+          best_match_point_idx2ptr[best_match_idx]->hash()];
+
+        matches_used.push_back(m);
+
         opengv::bearingVector_t b;
-        Eigen::Vector2d px = frame_query->features_.at(query_img_idx).px_;
-        int pyr_lvl_found = frame_query->features_.at(query_img_idx).pyr_lvl_;
+        Eigen::Vector2d px = query_feature->px_;
         b << camera_model_->cam2world(px).normalized();
         im1_bearings.push_back(b);
         
 
-        px = frame_best_match->features_.at(best_match_idx).px_;
-        pyr_lvl_found = frame_best_match->features_.at(best_match_idx).pyr_lvl_;
+        px = best_match_feature->px_;
         b << camera_model_->cam2world(px).normalized();
         im2_bearings.push_back(b);
       }
@@ -142,14 +186,14 @@ Sophus::SE3 FivePtRelposFinder::findRelpos(
   // Might need to be updated
   ransac.threshold_ = 2.0*(1.0 - cos(atan(sqrt(2.0)*0.5/800.0)));
   //ransac.threshold_ = 0.00000001;
-  ransac.max_iterations_ = 5000;
+  ransac.max_iterations_ = 500;
 
   ransac.computeModel();
 
   Sophus::SE3 se3_T_query_template (ransac.model_coefficients_.leftCols(3), ransac.model_coefficients_.rightCols(1));
 
   // Apply mean depth
-  se3_T_query_template.translation() = se3_T_query_template.translation() / se3_T_query_template.translation().norm() * mean_depth;
+  //se3_T_query_template.translation() = se3_T_query_template.translation() / se3_T_query_template.translation().norm() * mean_depth;
 
   std::cout << "the ransac results is: " << std::endl;
   std::cout << ransac.model_coefficients_ << std::endl << std::endl;

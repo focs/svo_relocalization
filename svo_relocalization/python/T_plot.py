@@ -37,9 +37,9 @@ class Coordinates(object):
     :T: @todo
 
     """
-    X = np.mat([[0.,0,0], [0.1,0,0]]).T
-    Y = np.mat([[0.,0,0], [0,0.1,0]]).T
-    Z = np.mat([[0.,0,0], [0,0,0.1]]).T
+    X = np.mat([[0.,0,0], [0.01,0,0]]).T
+    Y = np.mat([[0.,0,0], [0,0.01,0]]).T
+    Z = np.mat([[0.,0,0], [0,0,0.01]]).T
 
     self.X_ = self.projectPoint(X,T)
     self.Y_ = self.projectPoint(Y,T)

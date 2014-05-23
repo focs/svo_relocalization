@@ -36,6 +36,7 @@ public:
 
   static void frameToKeyPointVector(
       std::vector<std::vector<cv::KeyPoint>> &keypoints,
+      std::map<size_t,Feature*> &feature_hash2ptr,
       const FrameSharedPtr frame);
 
   static void SURFExtractDescriptor (

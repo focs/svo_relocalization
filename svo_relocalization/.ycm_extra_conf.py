@@ -22,7 +22,7 @@ flags = [
     '-stdlib=libstdc++'
 ]
 
-external_libs = ['eigen3', 'vikit_common', 'opengv', 'svo']
+external_libs = ['eigen3', 'vikit_common', 'opengv', 'svo', 'yaml-cpp']
 for lib in external_libs:
     lib_b = Popen("pkg-config --cflags " + lib, stdout=PIPE, shell=True).stdout.read()
     lib_b = lib_b[:-2]

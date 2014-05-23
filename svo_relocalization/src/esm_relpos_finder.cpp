@@ -46,6 +46,10 @@ cv::Mat warpOS3 (const cv::Mat &im, const Sophus::SO3 &t, vk::AbstractCamera *ca
       {
         im_out.at<uint8_t>(v,u) = im.at<uint8_t>(v_in, u_in);
       }
+      else
+      {
+        im_out.at<uint8_t>(v,u) = 0;
+      }
     }
   }
 
@@ -113,12 +117,44 @@ Sophus::SE3 ESMRelposFinder::findRelpos(
       0);
 
   cv::Mat im_show;
-  im_warp.convertTo(im_show, CV_8U);
+  cv::Mat im_se2_warp;
+  cv::Mat im_so3_warp;
+  im_warp.convertTo(im_se2_warp, CV_8UC1);
+  im_so3_warp = warpOS3(im_, se3_T_query_template.so3() , camera_model_);
+
   //im_show.push_back(im2);
-  im_show.push_back(warpOS3(im_, se3_T_query_template.so3() , camera_model_));
+  im_show.push_back(im_se2_warp);
+  im_show.push_back(im_so3_warp);
   //cv::imshow("so3 aligment", warpOS3(im_, se3_T_query_template.so3() , camera_model_));
   //im_show.push_back(im_warp);
+  //
 
+  //std::vector<cv::Mat> channels;
+  //cv::Mat color;
+
+  //std::cout << "color:   " << color.size().width << " x " << color.size().height << " x " << color.channels() << " " << color.type() << std::endl;
+  cv::Mat z = cv::Mat::zeros(im_.size(), CV_8UC1);
+
+  //std::cout << "Red:   " << z.size().width << " x " << z.size().height << " x " << z.channels() <<" " << color.type() <<  std::endl;
+  //std::cout << "Green: " << im_.size().width << " x " << im_.size().height << " x " << im_.channels() << " " << color.type() << std::endl;
+  //std::cout << "Blue:  " << im_se2_warp.size().width << " x " << im_se2_warp.size().height << " x " << im_se2_warp.channels() << " " << color.type() << std::endl;
+
+  //channels.push_back(z);
+
+  //cv::merge(channels, color);
+
+  cv::Mat img, g, fin_img;
+    img = cv::imread("/home/fox/Pictures/error_dist.png",CV_LOAD_IMAGE_GRAYSCALE);
+    std::vector<cv::Mat> channels;
+
+    g = cv::Mat::zeros(cv::Size(img.cols, img.rows), CV_8UC1);
+
+  channels.push_back(z);
+  channels.push_back(im_se2_warp);
+  channels.push_back(im2);
+
+  merge(channels,  fin_img);
+  imshow("hola", fin_img);
   cv::imshow("aliniation", im_show);
   cv::waitKey(1);
   

@@ -45,6 +45,8 @@
 #include <svo_relocalization/5pt_relpos_finder.h>
 #include <svo_relocalization/3pt_relpos_finder.h>
 #include <svo_relocalization/empty_relpos_finder.h>
+#include <svo_relocalization/yaml_parse.h>
+#include <svo_relocalization/svo_reloc_utils.h>
 
 namespace svo {
 
@@ -65,8 +67,10 @@ public:
   vk::AbstractCamera* cam_;
   bool quit_;
 
+  void writeMapToFile();
   //Relocalizer
   reloc::MultipleRelocalizer *relocalizer_;
+  map<int,bool> frames_is_saved;
   VoNode();
   ~VoNode();
   void imgCb(const sensor_msgs::ImageConstPtr& msg);
@@ -104,7 +108,7 @@ VoNode() :
   three_rpf->options_.pyr_lvl_ = 4;
   reloc::EmptyRelposFinder *empty_rpf = new reloc::EmptyRelposFinder();
 
-  reloc::AbstractRelposFinderSharedPtr relpos_finder (ESM_rpf);
+  reloc::AbstractRelposFinderSharedPtr relpos_finder (three_rpf);
 
   relocalizer_ = new reloc::MultipleRelocalizer (place_finder, relpos_finder);
 
@@ -132,38 +136,24 @@ VoNode::
   delete relocalizer_;
 }
 
-void svo2reloc (FramePtr svo_frame, reloc::FrameSharedPtr reloc_frame)
+void VoNode::writeMapToFile()
 {
+  list<FramePtr> frames_to_save;
 
-  reloc_frame->img_pyr_ = svo_frame->img_pyr_;
-  reloc_frame->id_ = svo_frame->id_;
-  reloc_frame->T_frame_world_ = svo_frame->T_f_w_;
-
-  for (Features::iterator it = svo_frame->fts_.begin(); it != svo_frame->fts_.end(); it++)
+  for (
+      auto it_frame = vo_->map().keyframes_.cbegin();
+      it_frame != vo_->map().keyframes_.cend();
+      ++it_frame)
   {
-    double depth = 0;
-
-    if ((*it)->point != NULL)
+    if (frames_is_saved.find((*it_frame)->id_) == frames_is_saved.end() &&
+        !frames_is_saved[(*it_frame)->id_])
     {
-      //std::cout << (*it)->point << " and "  << std::flush;
-      //std::cout << (*it)->point->id_ << std::endl;
-      depth = (svo_frame->pos() - (*it)->point->pos_).norm();
+      frames_is_saved[(*it_frame)->id_] = true;
+      frames_to_save.push_back((*it_frame));
     }
-
-    Vector2d px = (*it)->px;
-    int pyr_lvl = (*it)->level;
-    //px << (static_cast<int>(px[0]) >> pyr_lvl), (static_cast<int>(px[1]) >> pyr_lvl);
-
-    reloc::Feature f;
-    f.depth_ = depth;
-    f.px_ = px;
-    f.pyr_lvl_ = pyr_lvl;
-
-    reloc_frame->features_.push_back(f);
-    
   }
 
-  cout << "Number of features in reloc frame " << reloc_frame->features_.size() << endl;
+  writeYaml("/tmp/yaml_test/", frames_to_save);
 }
 
 void VoNode::
@@ -263,6 +253,10 @@ void VoNode::processUserActions()
     case 's':
       vo_->start();
       printf("Svo User Input: START\n");
+      break;
+    case 'w':
+      writeMapToFile();
+      printf("Svo User Input: WRITE\n");
       break;
     default: ;
   }

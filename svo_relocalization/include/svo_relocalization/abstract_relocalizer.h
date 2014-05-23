@@ -5,6 +5,8 @@
 #include <opencv2/opencv.hpp>
 #include <sophus/se3.h> 
 
+#include <svo_relocalization/frame.h>
+
 namespace reloc
 {
 
@@ -15,19 +17,17 @@ public:
   AbstractRelocalizer (){};
   virtual ~AbstractRelocalizer (){};
 
-  /// Add new frame to the relocalizer (usually all keyframes are used here)
-  virtual void addFrame (const std::vector<cv::Mat>& img_pyr, const Sophus::SE3& T_frame_world, int id) = 0;
+  virtual void removeFrame(int frame_id) = 0;
   
-  /// Start relocalization.
+  virtual void addFrame(FrameSharedPtr frame) = 0;
+
+  virtual void train () {};
+
   virtual bool relocalize(
-      const std::vector<cv::Mat>& query_img_pyr,
-      const Sophus::SE3& T_frame_world_estimate,
-      Sophus::SE3& T_frame_wordl_out,
-      int& id_out) = 0;
-
-  std::list<FrameDataPtr> frames_;
+      FrameSharedPtr frame_query,
+      Sophus::SE3 &pose_out,
+      int &id_out) = 0;
 };
-
 
 } /* reloc */ 
 

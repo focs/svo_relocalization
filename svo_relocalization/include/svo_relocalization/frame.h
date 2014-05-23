@@ -15,19 +15,19 @@ struct Feature {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Eigen::Vector2d px_; 
-  double depth_;
+  Eigen::Vector3d point_w_;
   size_t point_id_;
   size_t pyr_lvl_;
 
   Feature () : 
-    px_(Eigen::Vector2d(0.0, 0.0)),
-    depth_(0.0),
-    point_id_(0)
+    px_(Eigen::Vector2d(0,0)),
+    point_w_(0,0,0),
+    point_id_(-1)
   {}
 
-  Feature (const Eigen::Vector2d& px, double depth, size_t point_id) :
+  Feature (const Eigen::Vector2d& px, const Eigen::Vector3d &point_w, size_t point_id) :
     px_(px),
-    depth_(depth),
+    point_w_(point_w),
     point_id_(point_id)
   {}
 

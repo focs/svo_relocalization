@@ -85,6 +85,8 @@ add_library(svo_relocalization
   ./src/fern.cpp
   ./src/fern_classifier.cpp
   ./src/yaml_parse.cpp
+  ./src/svo_reloc_utils.cpp
+  ./src/ferns_relocalizer.cpp
 )
 target_link_libraries(svo_relocalization
   ${MY_LINK_LIBS}

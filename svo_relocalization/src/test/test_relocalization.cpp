@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <Eigen/Core>
+#include <yaml-cpp/yaml.h>
 #include <sophus/se3.h>
 #include <vikit/atan_camera.h>
 #include <svo_relocalization/multiple_relocalizer.h>
@@ -15,89 +16,139 @@
 #include <svo_relocalization/3pt_relpos_finder.h>
 #include <svo_relocalization/empty_relpos_finder.h>
 #include <svo_relocalization/frame.h>
+#include <svo_relocalization/yaml_parse.h>
+#include <svo_relocalization/svo_reloc_utils.h>
+#include <svo_relocalization/ferns_relocalizer.h>
+
+#include <svo/frame.h>
+#include <svo/feature.h>
+#include <svo/point.h>
 
 using namespace std;
 using namespace Eigen;
 using namespace reloc;
 using namespace cv;
 
+static char yaml_calib_file[] = "calib_file";
+static char yaml_train_path[] = "train_path";
+static char yaml_test_path[] = "test_path";
+static char yaml_results_path[] = "results_path";
+static char yaml_place_finder[] = "place_finder";
+static char yaml_relpos_finder[] = "relpos_finder";
+static char yaml_method[] = "method";
 
-void createPyr (const cv::Mat &im, int num_lvl, vector<Mat> &pyr_out)
+//void createPyr (const cv::Mat &im, int num_lvl, vector<Mat> &pyr_out)
+//{
+//  pyr_out.push_back(im);
+//
+//  for (size_t i = 1; i < num_lvl; ++i)
+//  {
+//    Size s (pyr_out[i-1].cols/2, pyr_out[i-1].rows/2);
+//    Mat resized;
+//    cv::resize(pyr_out[i-1], resized, s);
+//    pyr_out.push_back(resized);
+//  }
+//
+//}
+//
+//void readData (string path, vector<FrameSharedPtr> &data, map<int, FrameSharedPtr> &data_map)
+//{
+//  std::ifstream file_in(path + string("pose.txt"));
+//  string line;
+//  int id=0;
+//  float x, y, z;
+//  float rw, rx, ry, rz;
+//
+//  while (!file_in.eof())
+//  {
+//    file_in >> id >> x >> y >> z >>  rx >> ry >> rz >> rw;
+//    
+//    stringstream filename;
+//    filename << path << "image" << id << ".png";
+//
+//    cv::Mat im;
+//    im = cv::imread(filename.str(), CV_LOAD_IMAGE_GRAYSCALE);
+//    cv::flip(im,im, -1);
+//
+//    Vector3d t(x,y,z);
+//    Eigen::Quaterniond q(rw, rx, ry, rz);
+//    Sophus::SE3 T_frame_world (q, t);
+//
+//    FrameSharedPtr f (new Frame());
+//
+//    createPyr(im, 4, f->img_pyr_);
+//    f->T_frame_world_ = T_frame_world;
+//    f->id_ = id;
+//
+//    data.push_back(f);
+//    data_map[f->id_] = f;
+//  }
+//
+//  file_in.close();
+//}
+
+
+void readParams (string path, map<string,string> &params)
 {
-  pyr_out.push_back(im);
 
-  for (size_t i = 1; i < num_lvl; ++i)
-  {
-    Size s (pyr_out[i-1].cols/2, pyr_out[i-1].rows/2);
-    Mat resized;
-    cv::resize(pyr_out[i-1], resized, s);
-    pyr_out.push_back(resized);
-  }
+  std::ifstream fin (path);
 
+  YAML::Parser parser (fin);
+  YAML::Node doc;
+  parser.GetNextDocument(doc);
+
+  string tmp;
+  doc[yaml_calib_file] >> tmp;
+  params[yaml_calib_file] = tmp;
+
+  doc[yaml_calib_file] >> tmp;
+  params[yaml_calib_file] = tmp;
+
+  doc[yaml_train_path] >> tmp;
+  params[yaml_train_path] = tmp;
+
+  doc[yaml_test_path] >> tmp;
+  params[yaml_test_path] = tmp;
+
+  doc[yaml_results_path] >> tmp;
+  params[yaml_results_path] = tmp;
+
+  doc[yaml_place_finder] >> tmp;
+  params[yaml_place_finder] = tmp;
+
+  doc[yaml_relpos_finder] >> tmp;
+  params[yaml_relpos_finder] = tmp;
+
+  doc[yaml_method] >> tmp;
+  params[yaml_method] = tmp;
 }
 
-void readData (string path, vector<FrameSharedPtr> &data, map<int, FrameSharedPtr> &data_map)
-{
-  std::ifstream file_in(path + string("pose.txt"));
-  string line;
-  int id=0;
-  float x, y, z;
-  float rw, rx, ry, rz;
-
-  while (!file_in.eof())
-  {
-    file_in >> id >> x >> y >> z >>  rx >> ry >> rz >> rw;
-    
-    stringstream filename;
-    filename << path << "image" << id << ".png";
-
-    cv::Mat im;
-    im = cv::imread(filename.str(), CV_LOAD_IMAGE_GRAYSCALE);
-    cv::flip(im,im, -1);
-
-    Vector3d t(x,y,z);
-    Eigen::Quaterniond q(rw, rx, ry, rz);
-    Sophus::SE3 T_frame_world (q, t);
-
-    FrameSharedPtr f (new Frame());
-
-    createPyr(im, 4, f->img_pyr_);
-    f->T_frame_world_ = T_frame_world;
-    f->id_ = id;
-
-    data.push_back(f);
-    data_map[f->id_] = f;
-  }
-
-  file_in.close();
-}
 
 int main(int argc, char const *argv[])
 {
 
-  string training_images_path  = argv[1];
-  string testing_images_path = argv[2];
-  string results_path = argv[3];
+  if (argc < 2)
+  {
+    cout << "Usange: " << argv[0] << " <param file>" << endl;
+    exit(-1);
+  }
 
-  string place_finder_type = argv[4];
-  string relpos_finder_type = argv[5];
+  map<string,string> params;
+  readParams(argv[1], params);
+  
+  cout << "Num params " << params.size() << endl;
 
-  // Camera intrinsic parameters 
-  float cam_width = std::stof(argv[6]);
-  float cam_height = std::stof(argv[7]);
-  Vector2d cam_size (cam_width, cam_height);
-  float cam_fx = std::stof(argv[ 8]);
-  float cam_fy = std::stof(argv[ 9]);
-  float cam_cx = std::stof(argv[10]);
-  float cam_cy = std::stof(argv[11]);
-  float cam_d0 = std::stof(argv[12]);
-  vk::ATANCamera my_camera (cam_width, cam_height, cam_fx, cam_fy, cam_cx, cam_cy, cam_d0); 
+  for (auto t : params)
+    std::cout << t.first << " -> " << t.second << endl;
+
+  vk::AbstractCamera *cam = readCameraYaml(params[yaml_calib_file]);
+
 
   AbstractPlaceFinderSharedPtr place_finder;
-  if (place_finder_type == string("CC"))
+  if (params[yaml_place_finder] == string("CC"))
   {
     place_finder = AbstractPlaceFinderSharedPtr (new CCPlaceFinder());
-  } else if (place_finder_type == string("naive"))
+  } else if (params[yaml_place_finder] == string("naive"))
   {
     place_finder = AbstractPlaceFinderSharedPtr (new NaivePlaceFinder());
   } else
@@ -107,22 +158,25 @@ int main(int argc, char const *argv[])
   }
 
   AbstractRelposFinderSharedPtr relpos_finder;
-  if (relpos_finder_type == string("ESM"))
+  if (params[yaml_relpos_finder] == string("ESM"))
   {
-    ESMRelposFinder *esm_pf = new ESMRelposFinder(&my_camera);
-    esm_pf->options_.pyr_lvl_ = 3;
+    ESMRelposFinder *esm_pf = new ESMRelposFinder(cam);
+    esm_pf->options_.pyr_lvl_ = 2;
     relpos_finder = AbstractRelposFinderSharedPtr (esm_pf);
-  } else if (relpos_finder_type == string("5pt"))
+  } else if (params[yaml_relpos_finder] == string("5pt"))
   {
-    FivePtRelposFinder *five_pf = new FivePtRelposFinder(&my_camera);
-    five_pf->options_.pyr_lvl_ = 3;
+    FivePtRelposFinder *five_pf = new FivePtRelposFinder(cam);
+    five_pf->options_.pyr_lvl_ = 2;
 
     relpos_finder = AbstractRelposFinderSharedPtr (five_pf);
 
-  } else if (relpos_finder_type == string("3pt"))
+  } else if (params[yaml_relpos_finder] == string("3pt"))
   {
-    relpos_finder = AbstractRelposFinderSharedPtr (new ThreePtRelposFinder(&my_camera));
-  } else if (relpos_finder_type == string("empty"))
+    ThreePtRelposFinder *three_pf = new ThreePtRelposFinder(cam);
+    three_pf->options_.pyr_lvl_ = 3;
+    relpos_finder = AbstractRelposFinderSharedPtr (three_pf);
+
+  } else if (params[yaml_relpos_finder] == string("empty"))
   {
     relpos_finder = AbstractRelposFinderSharedPtr (new EmptyRelposFinder());
   } else
@@ -130,54 +184,70 @@ int main(int argc, char const *argv[])
     cerr << "Relpos Finder type not found" << endl;
     exit(-1);
   }
-  MultipleRelocalizer relocalizer(place_finder, relpos_finder);
 
-  // Structures to hold data
-  vector<FrameSharedPtr> training_data;
-  vector<FrameSharedPtr> testing_data;
-  map<int, FrameSharedPtr> testing_data_map;
-  map<int, FrameSharedPtr> training_data_map;
+  MultipleRelocalizer multi_relocalizer(place_finder, relpos_finder);
+  FernsRelocalizer ferns_relocalizer(cam, 70, 12, 32, 32);
 
-  readData(training_images_path, training_data, training_data_map);
-  readData(testing_images_path, testing_data, testing_data_map);
-
-  cout << "Number training images: " << training_data.size() << endl;
-  cout << "Number test images: " << testing_data.size() << endl;
-  cout << "Number training images: " << training_data_map.size() << endl;
-  cout << "Number test images: " << testing_data_map.size() << endl;
-  
-
-  for (size_t i = 0; i < training_data.size(); i+=1)
+  AbstractRelocalizer *relocalizer;
+  if (params[yaml_method] == string("multi"))
+    relocalizer = &multi_relocalizer;
+  else if (params[yaml_method] == string("ferns"))
+    relocalizer = &ferns_relocalizer;
+  else
   {
-    relocalizer.addFrame(training_data.at(i));
-    //cout << "Addin training image id: " << training_data.at(i)->id_ << endl;
+    cerr << "Relocalizer method not found" << endl;
+    exit(-1);
   }
 
+  // Data!!!
+  list<svo::FramePtr> train_frames;
+  list<svo::FramePtr> test_frames;
+  readYaml(params[yaml_train_path], train_frames, cam);
+  readYaml(params[yaml_test_path], test_frames, cam);
+  map<int,svo::FramePtr> svoframe_id2ptr;
 
-  std::ofstream file_out (results_path + string("pose.txt"));
-  for (size_t i = 0; i < testing_data.size(); ++i)
+  for(auto it_frame = train_frames.begin();
+      it_frame != train_frames.end();
+      ++it_frame)
   {
+    svoframe_id2ptr[(*it_frame)->id_] = *it_frame;
+    reloc::FrameSharedPtr reloc_frame (new reloc::Frame());
+    svo2reloc(*it_frame, reloc_frame);
+    
+    relocalizer->addFrame(reloc_frame);
+  }
+
+  cout << "Done adding frames" << endl;
+
+  //Train
+  relocalizer->train();
+
+  cout << "Done training" << endl;
+  
+  for(auto it_frame = test_frames.begin();
+      it_frame != test_frames.end();
+      ++it_frame)
+  {
+    reloc::FrameSharedPtr reloc_frame (new reloc::Frame());
+    svo2reloc(*it_frame, reloc_frame);
+    
+    Sophus::SE3 T_q_f_out, found_T_f_w;
     int id_out;
-    Sophus::SE3 pose_out;
-    relocalizer.relocalize(testing_data.at(i), pose_out, id_out);
+    relocalizer->relocalize(reloc_frame, T_q_f_out, id_out);
+    found_T_f_w = (T_q_f_out * svoframe_id2ptr[id_out]->T_f_w_);
 
-    file_out << testing_data.at(i)->id_ << " " << 
-      pose_out.translation()[0] << " " <<
-      pose_out.translation()[1] << " " <<
-      pose_out.translation()[2] << " " <<
-      pose_out.unit_quaternion().x() << " " <<
-      pose_out.unit_quaternion().y() << " " <<
-      pose_out.unit_quaternion().z() << " " <<
-      pose_out.unit_quaternion().w() << endl;
-    //namedWindow( "Test img", WINDOW_AUTOSIZE );
-    //imshow( "Test img", testing_data.at(i)->img_pyr_.at(0));
-    //namedWindow( "Found img", WINDOW_AUTOSIZE );
-    //imshow( "Found img", training_data_map[id_out]->img_pyr_.at(0));
-    //waitKey(0);          
+    cout << "Found id: " << id_out << endl;
+    cout << "Closest pose: " << endl << svoframe_id2ptr[id_out]->T_f_w_ << endl;
+    cout << "Found pose: " << endl << found_T_f_w << endl;
+    //cout << "Found pose: " << endl << (T_f_w_out) << endl;
+    cout << "Real pose: " << endl << reloc_frame->T_frame_world_;
+    cout << "Error: " << (found_T_f_w.translation() - reloc_frame->T_frame_world_.translation()).norm() << endl << endl;
+
+    
+    //(*it_frame)->T_f_w_ = found_T_f_w;
   }
-  file_out.close();
-  
 
+  //writeYaml(params[yaml_results_path], test_frames, false);
 
   return 0;
 }

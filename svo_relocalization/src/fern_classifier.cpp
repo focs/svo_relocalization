@@ -63,7 +63,7 @@ void FernClassifier::train (
 
   // Hopefully not too many classes
   int num_classes = data.row(3).maxCoeff()+ 1;
-  std::cout << "Number of classes: " << num_classes << std::endl;
+  //std::cout << "Number of classes: " << num_classes << std::endl;
 
   int max_x = ferns.at(0).getMaxX()*2;
   int max_y = ferns.at(0).getMaxY()*2;
@@ -131,8 +131,13 @@ void FernClassifier::train (
   {
     std::cout << "Distributions " << i << std::endl << distributions.at(i) << std::endl;
   }
-  std::cout << "Class_count" << std::endl << class_count << std::endl;
   */
+  //std::cout << "Class_count" << std::endl << class_count.transpose() << std::endl;
+
+  //std::cout << distributions.at(4).row(0) << std::endl;
+  //std::cout << class_count(0) << std::endl;
+  //exit(-1);
+ 
 
 }
 
@@ -141,9 +146,9 @@ int FernClassifier::classify (const cv::Mat &patch)
   uint32_t K = 1 << ferns.at(0).getNumTests();
 
   // Initialize final distribution
-  Eigen::VectorXf final_dsitribution;
+  Eigen::VectorXd final_dsitribution;
   final_dsitribution.resize(class_count.size());
-  final_dsitribution.fill(0);
+  final_dsitribution.fill(1);
 
   for (size_t i = 0; i < ferns.size(); ++i)
   {
@@ -154,17 +159,29 @@ int FernClassifier::classify (const cv::Mat &patch)
     //            N_c + K x Nr
     
     final_dsitribution =
-      final_dsitribution.array() +
-      (distributions.at(i).col(evaluated_fern).cast<float>().array() + Nr_)
-       / (class_count.cast<float>().array() + K*Nr_);
+      final_dsitribution.array() *
+      //(distributions.at(i).col(evaluated_fern).cast<float>().array() + Nr_)
+      // / (class_count.cast<float>().array() + K*Nr_);
+      (distributions.at(i).col(evaluated_fern).cast<double>().array() + Nr_);
+       /// (class_count.cast<double>().array() + K*Nr_ );
+    //std::cout << final_dsitribution.transpose() << std::endl;
+
+
+    //std::cout << final_dsitribution.sum() << std::endl;
+
     
   }
 
-  //final_dsitribution =
-  //  final_dsitribution.array() /
-  //  (class_count.cast<float>().array() +K*Nr_ ).pow(ferns.size());
+  //std::cout << "sum " << (distributions.at(20).row(0).cast<double>()/class_count(0)).sum() << std::endl;
 
-  //std::cout << "Found dist: " << std::endl << final_dsitribution << std::endl;
+
+  final_dsitribution =
+    final_dsitribution.array() /
+    (class_count.cast<float>().array() +K*Nr_ ).cast<double>();
+
+  //std::cout << "Found dist: " << std::endl << final_dsitribution.transpose() << std::endl;
+
+  //std::cout << "max of dist " << final_dsitribution.maxCoeff() << std::endl;
   int class_idx;
   final_dsitribution.maxCoeff(&class_idx);
 

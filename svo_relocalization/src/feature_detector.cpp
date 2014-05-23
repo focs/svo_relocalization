@@ -13,7 +13,6 @@ void FeatureDetector::FASTFindFeatures(
 
   //Should not be called
   std::cout << "Error, calling fast" << std::endl;
-  return;
   exit(-1);
 
   int threshold = 70; // ???? what is an adequate threshold 
@@ -39,18 +38,20 @@ void FeatureDetector::getOpenCvFeatures (
     std::vector<std::vector<cv::KeyPoint>> &found_features)
 {
 
-  if (frame->features_.size() <= 0)
-  {
-    std::cerr << "Looking for featured points" << std::endl;
-    // Calculate feature points for the image
-    FASTFindFeaturesPyr(frame->img_pyr_, pyr_lvl, found_features);
-    keyPointVectorToFrame(frame, found_features);
-  }
-  else
-  {
-    // if points have already been calculated use them
-    FeatureDetector::frameToKeyPointVector(found_features, frame);
-  }
+  std::cerr << "Error: calling getOpenCvFeatures" << std::endl;
+  exit(-1);
+  //if (frame->features_.size() <= 0)
+  //{
+  //  std::cerr << "Looking for featured points" << std::endl;
+  //  // Calculate feature points for the image
+  //  FASTFindFeaturesPyr(frame->img_pyr_, pyr_lvl, found_features);
+  //  keyPointVectorToFrame(frame, found_features);
+  //}
+  //else
+  //{
+  //  // if points have already been calculated use them
+  //  FeatureDetector::frameToKeyPointVector(found_features, frame);
+  //}
 }
 
 void FeatureDetector::keyPointVectorToFrame(
@@ -75,6 +76,7 @@ void FeatureDetector::keyPointVectorToFrame(
 
 void FeatureDetector::frameToKeyPointVector(
     std::vector<std::vector<cv::KeyPoint>> &keypoints,
+    std::map<size_t,Feature*> &feature_hash2ptr,
     const FrameSharedPtr frame)
 {
   
@@ -88,8 +90,10 @@ void FeatureDetector::frameToKeyPointVector(
           (static_cast<int>(px[1]) >> pyr_lvl_found));
     p.size = 7.0f;
     p.response = 90;
+    
     //keypoints.at(frame->features_.at(i).pyr_lvl_).push_back(p);
     keypoints.at(pyr_lvl_found).push_back(p);
+    feature_hash2ptr[p.hash()] = &frame->features_.at(i);
   }
 
 }

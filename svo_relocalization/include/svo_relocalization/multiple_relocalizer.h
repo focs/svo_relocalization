@@ -4,6 +4,7 @@
 
 
 #include <svo_relocalization/frame.h>
+#include <svo_relocalization/abstract_relocalizer.h>
 #include <svo_relocalization/abstract_place_finder.h>
 #include <svo_relocalization/abstract_relpos_finder.h>
 
@@ -11,7 +12,7 @@
 namespace reloc
 {
 
-class MultipleRelocalizer
+class MultipleRelocalizer : public AbstractRelocalizer
 {
 
 public:
