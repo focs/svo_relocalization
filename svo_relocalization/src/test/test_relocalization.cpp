@@ -36,6 +36,9 @@ static char yaml_results_path[] = "results_path";
 static char yaml_place_finder[] = "place_finder";
 static char yaml_relpos_finder[] = "relpos_finder";
 static char yaml_method[] = "method";
+static char yaml_num_ferns [] = "num_ferns";
+static char yaml_ferns_num_tests [] = "ferns_num_tests";
+static char yaml_ferns_patch_size [] = "ferns_patch_size";
 
 //void createPyr (const cv::Mat &im, int num_lvl, vector<Mat> &pyr_out)
 //{
@@ -121,11 +124,22 @@ void readParams (string path, map<string,string> &params)
 
   doc[yaml_method] >> tmp;
   params[yaml_method] = tmp;
+
+  doc[yaml_num_ferns] >> tmp;
+  params[yaml_num_ferns] = tmp;
+
+  doc[yaml_ferns_num_tests] >> tmp;
+  params[yaml_ferns_num_tests] = tmp;
+
+  doc[yaml_ferns_patch_size] >> tmp;
+  params[yaml_ferns_patch_size] = tmp;
 }
 
 
 int main(int argc, char const *argv[])
 {
+  clock_t tic, toc;
+  double time_diff, time_total;
 
   if (argc < 2)
   {
@@ -161,7 +175,7 @@ int main(int argc, char const *argv[])
   if (params[yaml_relpos_finder] == string("ESM"))
   {
     ESMRelposFinder *esm_pf = new ESMRelposFinder(cam);
-    esm_pf->options_.pyr_lvl_ = 2;
+    esm_pf->options_.pyr_lvl_ = 3;
     relpos_finder = AbstractRelposFinderSharedPtr (esm_pf);
   } else if (params[yaml_relpos_finder] == string("5pt"))
   {
@@ -186,7 +200,11 @@ int main(int argc, char const *argv[])
   }
 
   MultipleRelocalizer multi_relocalizer(place_finder, relpos_finder);
-  FernsRelocalizer ferns_relocalizer(cam, 70, 12, 32, 32);
+  FernsRelocalizer ferns_relocalizer(cam,
+      stoi(params[yaml_num_ferns]),
+      stoi(params[yaml_ferns_num_tests]),
+      stoi(params[yaml_ferns_patch_size]),
+      stoi(params[yaml_ferns_patch_size]));
 
   AbstractRelocalizer *relocalizer;
   if (params[yaml_method] == string("multi"))
@@ -220,10 +238,16 @@ int main(int argc, char const *argv[])
   cout << "Done adding frames" << endl;
 
   //Train
+  tic = clock();
   relocalizer->train();
+  toc = clock();
+  time_diff = static_cast<double>(toc - tic)/CLOCKS_PER_SEC;
+
+  cout << "Time to train " << time_diff << " sec" << endl;
 
   cout << "Done training" << endl;
   
+  time_total = 0;
   for(auto it_frame = test_frames.begin();
       it_frame != test_frames.end();
       ++it_frame)
@@ -233,8 +257,13 @@ int main(int argc, char const *argv[])
     
     Sophus::SE3 T_q_f_out, found_T_f_w;
     int id_out;
+    tic = clock();
     relocalizer->relocalize(reloc_frame, T_q_f_out, id_out);
+    toc = clock();
     found_T_f_w = (T_q_f_out * svoframe_id2ptr[id_out]->T_f_w_);
+
+    time_diff = static_cast<double>(toc - tic)/CLOCKS_PER_SEC;
+    time_total += time_diff;
 
     cout << "Found id: " << id_out << endl;
     cout << "Closest pose: " << endl << svoframe_id2ptr[id_out]->T_f_w_ << endl;
@@ -243,11 +272,16 @@ int main(int argc, char const *argv[])
     cout << "Real pose: " << endl << reloc_frame->T_frame_world_;
     cout << "Error: " << (found_T_f_w.translation() - reloc_frame->T_frame_world_.translation()).norm() << endl << endl;
 
+    cout << "Relocalize time " << time_diff << " sec" << endl;
+
     
-    //(*it_frame)->T_f_w_ = found_T_f_w;
+    (*it_frame)->T_f_w_ = found_T_f_w;
   }
 
-  //writeYaml(params[yaml_results_path], test_frames, false);
+  cout << "Mean relocalization time " << time_total/test_frames.size() << " sec" << endl;
+
+  writeYaml(params[yaml_results_path], test_frames, false);
 
   return 0;
+
 }

@@ -43,11 +43,11 @@ bool MultipleRelocalizer::relocalize(
   pose_out = relpos_finder_->findRelpos(frame_query, found_frame);
 
   /****************************************************************************/
-  cv::Mat tmp;
-  tmp.push_back(found_frame->img_pyr_.at(0));
-  tmp.push_back(frame_query->img_pyr_.at(0));
-  cv::imshow("found - query", tmp);
-  cv::waitKey(1);
+  //cv::Mat tmp;
+  //tmp.push_back(found_frame->img_pyr_.at(0));
+  //tmp.push_back(frame_query->img_pyr_.at(0));
+  //cv::imshow("found - query", tmp);
+  //cv::waitKey(0);
   /****************************************************************************/
   
   // We dont know if the result is correct or no for now

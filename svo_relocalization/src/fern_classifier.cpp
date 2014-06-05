@@ -63,7 +63,7 @@ void FernClassifier::train (
 
   // Hopefully not too many classes
   int num_classes = data.row(3).maxCoeff()+ 1;
-  //std::cout << "Number of classes: " << num_classes << std::endl;
+  std::cout << "Number of classes: " << num_classes << std::endl;
 
   int max_x = ferns.at(0).getMaxX()*2;
   int max_y = ferns.at(0).getMaxY()*2;
