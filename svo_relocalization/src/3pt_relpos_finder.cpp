@@ -186,59 +186,59 @@ Sophus::SE3 ThreePtRelposFinder::findRelpos(
   ransac.computeModel();
 
   /**********************************TEST**************************************/
-  std::vector< cv::DMatch > matches_inilers;
-  for(size_t i = 0; i < ransac.inliers_.size(); i++)
-    matches_inilers.push_back(matches_used.at(ransac.inliers_.at(i)));
+  //std::vector< cv::DMatch > matches_inilers;
+  //for(size_t i = 0; i < ransac.inliers_.size(); i++)
+  //  matches_inilers.push_back(matches_used.at(ransac.inliers_.at(i)));
 
 
-  std::vector<cv::KeyPoint> query_keypoints_merged;
-  for (size_t i = 0; i < query_keypoints.size(); ++i)
-  {
-    for (size_t j = 0; j < query_keypoints.at(i).size(); ++j)
-    {
-      cv::KeyPoint tmp_kp= query_keypoints.at(i).at(j);
-      //tmp_kp.pt = cv::Point2f(tmp_kp.pt.x, tmp_kp.pt.y);
-      tmp_kp.pt = cv::Point2f(static_cast<int>(tmp_kp.pt.x) << i, static_cast<int>(tmp_kp.pt.y) << i);
+  //std::vector<cv::KeyPoint> query_keypoints_merged;
+  //for (size_t i = 0; i < query_keypoints.size(); ++i)
+  //{
+  //  for (size_t j = 0; j < query_keypoints.at(i).size(); ++j)
+  //  {
+  //    cv::KeyPoint tmp_kp= query_keypoints.at(i).at(j);
+  //    //tmp_kp.pt = cv::Point2f(tmp_kp.pt.x, tmp_kp.pt.y);
+  //    tmp_kp.pt = cv::Point2f(static_cast<int>(tmp_kp.pt.x) << i, static_cast<int>(tmp_kp.pt.y) << i);
 
-      query_keypoints_merged.push_back(tmp_kp);
-    }
-  }
+  //    query_keypoints_merged.push_back(tmp_kp);
+  //  }
+  //}
 
-  std::vector<cv::KeyPoint> best_match_keypoints_merged;
-  for (size_t i = 0; i < best_match_keypoints.size(); ++i)
-  {
-    for (size_t j = 0; j < best_match_keypoints.at(i).size(); ++j)
-    {
-      cv::KeyPoint tmp_kp= best_match_keypoints.at(i).at(j);
-      //tmp_kp.pt = cv::Point2f(tmp_kp.pt.x, tmp_kp.pt.y);
-      tmp_kp.pt = cv::Point2f(static_cast<int>(tmp_kp.pt.x) << i, static_cast<int>(tmp_kp.pt.y) << i);
+  //std::vector<cv::KeyPoint> best_match_keypoints_merged;
+  //for (size_t i = 0; i < best_match_keypoints.size(); ++i)
+  //{
+  //  for (size_t j = 0; j < best_match_keypoints.at(i).size(); ++j)
+  //  {
+  //    cv::KeyPoint tmp_kp= best_match_keypoints.at(i).at(j);
+  //    //tmp_kp.pt = cv::Point2f(tmp_kp.pt.x, tmp_kp.pt.y);
+  //    tmp_kp.pt = cv::Point2f(static_cast<int>(tmp_kp.pt.x) << i, static_cast<int>(tmp_kp.pt.y) << i);
 
-      best_match_keypoints_merged.push_back(tmp_kp);
-    }
-  }
+  //    best_match_keypoints_merged.push_back(tmp_kp);
+  //  }
+  //}
 
-  cv::namedWindow("inliers", 1);
-  cv::Mat img_matches;
-  cv::drawMatches(
-      frame_query->img_pyr_.at(0),
-      query_keypoints_merged,
-      frame_best_match->img_pyr_.at(0),
-      best_match_keypoints_merged,
-      matches_inilers,
-      img_matches);
+  //cv::namedWindow("inliers", 1);
+  //cv::Mat img_matches;
+  //cv::drawMatches(
+  //    frame_query->img_pyr_.at(0),
+  //    query_keypoints_merged,
+  //    frame_best_match->img_pyr_.at(0),
+  //    best_match_keypoints_merged,
+  //    matches_inilers,
+  //    img_matches);
 
-  cv::imshow("inliers", img_matches);
+  //cv::imshow("inliers", img_matches);
 
-  cv::namedWindow("matches", 1);
-  cv::drawMatches(
-      frame_query->img_pyr_.at(0),
-      query_keypoints_merged,
-      frame_best_match->img_pyr_.at(0),
-      best_match_keypoints_merged,
-      matches_used,
-      img_matches);
-  cv::imshow("matches", img_matches);
-  cv::waitKey(1);
+  //cv::namedWindow("matches", 1);
+  //cv::drawMatches(
+  //    frame_query->img_pyr_.at(0),
+  //    query_keypoints_merged,
+  //    frame_best_match->img_pyr_.at(0),
+  //    best_match_keypoints_merged,
+  //    matches_used,
+  //    img_matches);
+  //cv::imshow("matches", img_matches);
+  //cv::waitKey(0);
 
   /**********************************TEST**************************************/
   Sophus::SE3 T_world_query (ransac.model_coefficients_.leftCols(3), ransac.model_coefficients_.rightCols(1));
