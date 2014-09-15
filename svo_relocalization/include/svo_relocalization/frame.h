@@ -39,7 +39,7 @@ class Frame
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  std::vector<Feature> features_;
+  std::vector<Feature, Eigen::aligned_allocator<Feature>> features_;
   std::vector<cv::Mat> img_pyr_;
   Sophus::SE3 T_frame_world_;
   size_t id_;
